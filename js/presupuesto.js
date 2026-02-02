@@ -602,8 +602,13 @@ export const presupuestoView = {
 
                                 contentHtml += `
                                     <div class="col-md-6 col-print-6">
-                                        <div class="d-flex border rounded overflow-hidden h-100 shadow-sm-hover">
-                                            <div class="bg-cover" style="width: 100px; min-width: 100px; ${imgStyle} background-size: cover; background-position: center;"></div>
+                                        <div class="d-flex border rounded overflow-hidden h-100 shadow-sm-hover align-items-center">
+                                            <div style="width: 100px; height: 100px; min-width: 100px; background-color: #eee;">
+                                                <img src="${recipe.imageUrl || 'https://via.placeholder.com/100x100?text=No+Img'}" 
+                                                     alt="${item.recipeName}" 
+                                                     style="width: 100%; height: 100%; object-fit: cover; display: block;"
+                                                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'text-center text-muted small py-4\'>Sin Foto</div>';">
+                                            </div>
                                             <div class="p-3 flex-grow-1 d-flex flex-column justify-content-center">
                                                  <div class="d-flex justify-content-between align-items-start mb-1">
                                                      <div class="fw-bold">${item.recipeName}</div>
