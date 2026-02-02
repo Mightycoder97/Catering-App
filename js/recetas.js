@@ -43,6 +43,32 @@ export const recetasView = {
                                             <input type="file" class="form-control" id="recipe-image" accept="image/*">
                                             <input type="hidden" id="recipe-image-url">
                                         </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Tipo de Comida</label>
+                                            <select class="form-select" id="recipe-meal-type">
+                                                <option value="">Selecciona...</option>
+                                                <option value="Desayuno">Desayuno</option>
+                                                <option value="Almuerzo">Almuerzo</option>
+                                                <option value="Cena">Cena</option>
+                                                <option value="Piqueo">Piqueo</option>
+                                                <option value="Postre">Postre</option>
+                                                <option value="Bebida">Bebida</option>
+                                                <option value="Otro">Otro</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Estilo de Cocina</label>
+                                            <select class="form-select" id="recipe-cuisine-style">
+                                                <option value="">Selecciona...</option>
+                                                <option value="Criollo">Criollo</option>
+                                                <option value="Internacional">Internacional</option>
+                                                <option value="Italiano">Italiano</option>
+                                                <option value="Americano">Americano</option>
+                                                <option value="Asiático">Asiático</option>
+                                                <option value="Fusión">Fusión</option>
+                                                <option value="Otro">Otro</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -123,7 +149,11 @@ export const recetasView = {
                             ${imgHtml}
                             <div class="card-body">
                                 <h5 class="card-title fw-bold">${data.nombre}</h5>
-                                <p class="card-text text-muted small">Costo Est: $${cost.toFixed(2)}</p>
+                                <div class="mb-2">
+                                    ${data.tipoComida ? `<span class="badge bg-info text-dark me-1">${data.tipoComida}</span>` : ''}
+                                    ${data.estiloCocina ? `<span class="badge bg-secondary me-1">${data.estiloCocina}</span>` : ''}
+                                </div>
+                                <p class="card-text text-muted small">Costo Est: S/. ${cost.toFixed(2)}</p>
                             </div>
                             <div class="card-footer bg-white border-top-0 text-end">
                                 <button class="btn btn-sm btn-outline-primary edit-recipe" data-id="${docSnap.id}">Editar</button>
@@ -168,7 +198,7 @@ export const recetasView = {
             let options = `<option value="">Selecciona insumo...</option>`;
             insumosDB.forEach(i => {
                 const selected = (data && data.insumoId === i.id) ? 'selected' : '';
-                options += `<option value="${i.id}" ${selected}>${i.nombre} ($${i.costo}/${i.unidad})</option>`;
+                options += `<option value="${i.id}" ${selected}>${i.nombre} (S/. ${i.costo}/${i.unidad})</option>`;
             });
 
             row.innerHTML = `
@@ -193,7 +223,10 @@ export const recetasView = {
             document.getElementById('recipe-form').reset();
             document.getElementById('recipe-id').value = '';
             document.getElementById('recipe-image-url').value = '';
+            document.getElementById('recipe-image-url').value = '';
             document.getElementById('recipe-description').value = ''; // Reset desc
+            document.getElementById('recipe-meal-type').value = '';
+            document.getElementById('recipe-cuisine-style').value = '';
             ingredientsList.innerHTML = '';
             addIngredientRow();
             document.getElementById('recipeModalLabel').innerText = "Nueva Receta";
@@ -213,6 +246,8 @@ export const recetasView = {
             document.getElementById('recipe-name').value = data.nombre;
             document.getElementById('recipe-image-url').value = data.imageUrl || '';
             document.getElementById('recipe-description').value = data.descripcion || ''; // Load desc
+            document.getElementById('recipe-meal-type').value = data.tipoComida || '';
+            document.getElementById('recipe-cuisine-style').value = data.estiloCocina || '';
             document.getElementById('recipeModalLabel').innerText = "Editar Receta";
 
             ingredientsList.innerHTML = '';
@@ -267,6 +302,8 @@ export const recetasView = {
                 const docData = {
                     nombre: name,
                     descripcion: document.getElementById('recipe-description').value.trim(), // Save desc
+                    tipoComida: document.getElementById('recipe-meal-type').value,
+                    estiloCocina: document.getElementById('recipe-cuisine-style').value,
                     imageUrl: imageUrl,
                     ingredientes: ingredients,
                     updatedAt: new Date()

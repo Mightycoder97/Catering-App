@@ -83,7 +83,7 @@ export const presupuestoView = {
 
                 <!-- Footer Actions -->
                  <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded border sticky-bottom mb-5">
-                    <h3 class="mb-0" id="display-total-cost">Total: $0.00</h3>
+                    <h3 class="mb-0" id="display-total-cost">Total: S/. 0.00</h3>
                     <div class="d-flex gap-2">
                          <button class="btn btn-success btn-lg" id="btn-calculate"><i class="bi bi-calculator"></i> Calcular</button>
                          <button class="btn btn-primary btn-lg" id="btn-save-budget"><i class="bi bi-save"></i> Guardar Presupuesto</button>
@@ -271,7 +271,7 @@ export const presupuestoView = {
                             <div class="small">${data.daysCount || 1} días</div>
                             <div class="small text-muted">${data.eventDate || ''}</div>
                         </td>
-                        <td class="text-success">$${(data.totalCost || 0).toFixed(2)}</td>
+                        <td class="text-success">S/. ${(data.totalCost || 0).toFixed(2)}</td>
                         <td class="text-muted small">${dateStr}</td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-info view-btn" data-id="${d.id}"><i class="bi bi-eye"></i></button>
@@ -467,7 +467,7 @@ export const presupuestoView = {
 
         btnCalculate.addEventListener('click', () => {
             const t = calculateTotal();
-            displayTotal.innerText = `Total: $${t.toFixed(2)}`;
+            displayTotal.innerText = `Total: S/. ${t.toFixed(2)}`;
         });
 
         // --- Save ---
@@ -615,7 +615,7 @@ export const presupuestoView = {
                                                      <span class="badge bg-success bg-opacity-10 text-success border border-success">${item.pax} pax</span>
                                                  </div>
                                                  ${recipe.descripcion ? `<div class="small text-muted mb-2" style="font-size: 0.85rem; line-height: 1.2;">${recipe.descripcion}</div>` : ''}
-                                                 ${item.variant ? `<small class="text-muted fst-italic">Variante: ${item.variant}</small>` : ''}
+                                                 ${item.variant ? `<small class="text-muted fst-italic">Tipo de Menú: ${item.variant}</small>` : ''}
                                             </div>
                                         </div>
                                     </div>
@@ -630,7 +630,7 @@ export const presupuestoView = {
 
                 contentHtml += `
                     <div class="mt-5 pt-3 border-top text-end">
-                        <h3 class="text-success">Inversión Total Estimada: $${data.totalCost.toFixed(2)}</h3>
+                        <h3 class="text-success">Inversión Total Estimada: S/. ${data.totalCost.toFixed(2)}</h3>
                     </div>
                  `;
 
@@ -674,7 +674,7 @@ export const presupuestoView = {
                                  <td>${insumo.nombre}</td>
                                  <td>${qty.toFixed(2)}</td>
                                  <td>${insumo.unidad}</td>
-                                 <td class="text-end">$${cost.toFixed(2)}</td>
+                                 <td class="text-end">S/. ${cost.toFixed(2)}</td>
                              </tr>
                          `;
                     }
@@ -685,7 +685,7 @@ export const presupuestoView = {
                         <tfoot class="table-group-divider bg-light fw-bold">
                             <tr>
                                 <td colspan="3" class="text-end">Total Materia Prima</td>
-                                <td class="text-end">$${grandTotal.toFixed(2)}</td>
+                                <td class="text-end">S/. ${grandTotal.toFixed(2)}</td>
                             </tr>
                         </tfoot>
                     </table>

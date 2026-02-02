@@ -68,7 +68,7 @@ export const insumosView = {
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Costo por Unidad ($)</label>
+                                        <label class="form-label">Costo por Unidad (S/.)</label>
                                         <input type="number" step="0.01" class="form-control" name="costo" required>
                                     </div>
                                 </div>
@@ -110,7 +110,7 @@ export const insumosView = {
                         <td>${data.nombre}</td>
                         <td>${data.categoria || '-'}</td>
                         <td>${data.unidad}</td>
-                        <td>$${parseFloat(data.costo).toFixed(2)}</td>
+                        <td>S/. ${parseFloat(data.costo).toFixed(2)}</td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-primary me-1 edit-btn" 
                                 data-id="${doc.id}"
