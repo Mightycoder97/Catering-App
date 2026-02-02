@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body class="bg-light">
 
     <!-- Navbar -->
@@ -39,6 +41,11 @@
                             <i class="bi bi-calculator me-1"></i> Presupuesto
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="app.router.navigate('clientes')">
+                            <i class="bi bi-people me-1"></i> Clientes
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -64,4 +71,5 @@
     <!-- Type='module' ensures we can use import/export -->
     <script type="module" src="js/app.js"></script>
 </body>
+
 </html>
