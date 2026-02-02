@@ -10,6 +10,39 @@ export const recetasView = {
                 </button>
             </div>
 
+            <!-- Filter Bar -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body py-2">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-auto fw-bold text-muted small"><i class="bi bi-funnel"></i> Filtrar:</div>
+                        <div class="col-auto">
+                            <select class="form-select form-select-sm" id="filter-meal-type">
+                                <option value="">Todos los Tipos</option>
+                                <option value="Desayuno">Desayuno</option>
+                                <option value="Almuerzo">Almuerzo</option>
+                                <option value="Cena">Cena</option>
+                                <option value="Piqueo">Piqueo</option>
+                                <option value="Postre">Postre</option>
+                                <option value="Bebida">Bebida</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <select class="form-select form-select-sm" id="filter-cuisine-style">
+                                <option value="">Todos los Estilos</option>
+                                <option value="Criollo">Criollo</option>
+                                <option value="Internacional">Internacional</option>
+                                <option value="Italiano">Italiano</option>
+                                <option value="Americano">Americano</option>
+                                <option value="Asiático">Asiático</option>
+                                <option value="Fusión">Fusión</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Recipe List -->
             <div class="row g-4" id="recipe-cards-container">
                 <!-- Cards injected here -->
@@ -117,11 +150,13 @@ export const recetasView = {
             loadRecipes();
         };
 
+        let allRecipes = []; // Local cache for filtering
+
         const loadRecipes = async () => {
             container.innerHTML = '<div class="col-12 text-center"><div class="spinner-border text-primary"></div></div>';
             try {
                 const snap = await getDocs(collection(db, "recetas"));
-                container.innerHTML = '';
+                allRecipes = [];
 
                 if (snap.empty) {
                     container.innerHTML = '<div class="col-12 text-center text-muted">No hay recetas creadas.</div>';
@@ -129,50 +164,84 @@ export const recetasView = {
                 }
 
                 snap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    let cost = 0;
-                    if (data.ingredientes) {
-                        data.ingredientes.forEach(ing => {
-                            const ins = insumosDB.find(i => i.id === ing.insumoId);
-                            if (ins) cost += (ing.quantity * ins.costo);
-                        });
-                    }
-
-                    const imgHtml = data.imageUrl
-                        ? `<img src="${data.imageUrl}" class="card-img-top" alt="${data.nombre}" style="height: 180px; object-fit: cover;">`
-                        : `<div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;"><i class="bi bi-camera fs-1"></i></div>`;
-
-                    const div = document.createElement('div');
-                    div.className = 'col-md-4 col-sm-6';
-                    div.innerHTML = `
-                        <div class="card h-100 shadow-sm recipe-card">
-                            ${imgHtml}
-                            <div class="card-body">
-                                <h5 class="card-title fw-bold">${data.nombre}</h5>
-                                <div class="mb-2">
-                                    ${data.tipoComida ? `<span class="badge bg-info text-dark me-1">${data.tipoComida}</span>` : ''}
-                                    ${data.estiloCocina ? `<span class="badge bg-secondary me-1">${data.estiloCocina}</span>` : ''}
-                                </div>
-                                <p class="card-text text-muted small">Costo Est: S/. ${cost.toFixed(2)}</p>
-                            </div>
-                            <div class="card-footer bg-white border-top-0 text-end">
-                                <button class="btn btn-sm btn-outline-primary edit-recipe" data-id="${docSnap.id}">Editar</button>
-                                <button class="btn btn-sm btn-outline-danger delete-recipe" data-id="${docSnap.id}">Eliminar</button>
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(div);
+                    allRecipes.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
-                attachListeners();
-
+                renderRecipes(allRecipes);
             } catch (e) {
                 console.error(e);
                 container.innerHTML = '<div class="alert alert-danger">Error cargando recetas.</div>';
             }
         };
 
+        const renderRecipes = (recipes) => {
+            container.innerHTML = '';
+
+            if (recipes.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center text-muted py-5">No se encontraron recetas con estos filtros.</div>';
+                return;
+            }
+
+            recipes.forEach(data => {
+                let cost = 0;
+                if (data.ingredientes) {
+                    data.ingredientes.forEach(ing => {
+                        const ins = insumosDB.find(i => i.id === ing.insumoId);
+                        if (ins) cost += (ing.quantity * ins.costo);
+                    });
+                }
+
+                const imgHtml = data.imageUrl
+                    ? `<img src="${data.imageUrl}" class="card-img-top" alt="${data.nombre}" style="height: 180px; object-fit: cover;">`
+                    : `<div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;"><i class="bi bi-camera fs-1"></i></div>`;
+
+                const div = document.createElement('div');
+                div.className = 'col-md-4 col-sm-6';
+                div.innerHTML = `
+                    <div class="card h-100 shadow-sm recipe-card">
+                        ${imgHtml}
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">${data.nombre}</h5>
+                            <div class="mb-2">
+                                ${data.tipoComida ? `<span class="badge bg-info text-dark me-1">${data.tipoComida}</span>` : ''}
+                                ${data.estiloCocina ? `<span class="badge bg-secondary me-1">${data.estiloCocina}</span>` : ''}
+                            </div>
+                            <p class="card-text text-muted small">Costo Est: S/. ${cost.toFixed(2)}</p>
+                        </div>
+                        <div class="card-footer bg-white border-top-0 text-end">
+                            <button class="btn btn-sm btn-outline-primary edit-recipe" data-id="${data.id}">Editar</button>
+                            <button class="btn btn-sm btn-outline-danger delete-recipe" data-id="${data.id}">Eliminar</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            attachCardListeners();
+        };
+
         const attachListeners = () => {
+            // Filter Listeners
+            const filterMeal = document.getElementById('filter-meal-type');
+            const filterCuisine = document.getElementById('filter-cuisine-style');
+
+            const applyFilters = () => {
+                const meal = filterMeal.value;
+                const cuisine = filterCuisine.value;
+
+                const filtered = allRecipes.filter(r => {
+                    const matchMeal = meal ? r.tipoComida === meal : true;
+                    const matchCuisine = cuisine ? r.estiloCocina === cuisine : true;
+                    return matchMeal && matchCuisine;
+                });
+                renderRecipes(filtered);
+            };
+
+            filterMeal.addEventListener('change', applyFilters);
+            filterCuisine.addEventListener('change', applyFilters);
+        };
+
+        const attachCardListeners = () => {
             document.querySelectorAll('.delete-recipe').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if (confirm('¿Eliminar receta?')) {
