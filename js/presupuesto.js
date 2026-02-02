@@ -637,7 +637,7 @@ export const presupuestoView = {
                     <!-- HEADER -->
                     <div class="proposal-header d-flex justify-content-between align-items-start">
                         <div class="proposal-brand text-center text-md-start">
-                             <img src="https://placehold.co/120x120?text=LOGO" alt="Logo" style="max-height: 80px; margin-bottom: 10px;" id="proposal-logo"> 
+                             <img src="images/Logo_papa.png" alt="Logo" style="max-height: 100px; margin-bottom: 10px;" id="proposal-logo">
                             <div>PAPA N' RES</div>
                             <div style="font-size: 10px; letter-spacing: 3px; color: #555; text-transform: uppercase; font-weight: normal; margin-top: 5px;">Catering Parrillero y Criollo</div>
                         </div>
