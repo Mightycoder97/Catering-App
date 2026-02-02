@@ -636,7 +636,8 @@ export const presupuestoView = {
                 <div class="proposal-sheet print-section">
                     <!-- HEADER -->
                     <div class="proposal-header d-flex justify-content-between align-items-start">
-                        <div class="proposal-brand">
+                        <div class="proposal-brand text-center text-md-start">
+                             <img src="https://via.placeholder.com/120x120?text=LOGO" alt="Logo" style="max-height: 80px; margin-bottom: 10px;" id="proposal-logo"> 
                             <div>PAPA N' RES</div>
                             <div style="font-size: 10px; letter-spacing: 3px; color: #555; text-transform: uppercase; font-weight: normal; margin-top: 5px;">Catering Parrillero y Criollo</div>
                         </div>

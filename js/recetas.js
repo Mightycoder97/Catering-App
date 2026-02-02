@@ -66,6 +66,10 @@ export const recetasView = {
                                             <input type="text" class="form-control" id="recipe-name" required placeholder="Ej. Lomo Saltado">
                                         </div>
                                         <div class="mb-3">
+                                            <label class="form-label">Precio de Venta (S/.)</label>
+                                            <input type="number" class="form-control" id="recipe-sale-price" placeholder="0.00" step="0.01">
+                                        </div>
+                                        <div class="mb-3">
                                             <label class="form-label">Descripción (Para la Propuesta)</label>
                                             <textarea class="form-control" id="recipe-description" rows="2" placeholder="Ej. Trozos de lomo fino salteados al wok con cebolla y tomate..."></textarea>
                                         </div>
@@ -290,6 +294,7 @@ export const recetasView = {
 
         document.getElementById('btn-show-create-recipe').addEventListener('click', () => {
             document.getElementById('recipe-form').reset();
+            document.getElementById('recipe-sale-price').value = '';
             document.getElementById('recipe-id').value = '';
             document.getElementById('recipe-image-url').value = '';
             document.getElementById('recipe-image-url').value = '';
@@ -313,6 +318,7 @@ export const recetasView = {
 
             document.getElementById('recipe-id').value = id;
             document.getElementById('recipe-name').value = data.nombre;
+            document.getElementById('recipe-sale-price').value = data.precioVenta || '';
             document.getElementById('recipe-image-url').value = data.imageUrl || '';
             document.getElementById('recipe-description').value = data.descripcion || ''; // Load desc
             document.getElementById('recipe-meal-type').value = data.tipoComida || '';
@@ -370,6 +376,7 @@ export const recetasView = {
 
                 const docData = {
                     nombre: name,
+                    precioVenta: parseFloat(document.getElementById('recipe-sale-price').value) || 0,
                     descripcion: document.getElementById('recipe-description').value.trim(), // Save desc
                     tipoComida: document.getElementById('recipe-meal-type').value,
                     estiloCocina: document.getElementById('recipe-cuisine-style').value,
