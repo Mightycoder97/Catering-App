@@ -32,6 +32,10 @@ export const recetasView = {
                                             <label class="form-label">Nombre del Plato</label>
                                             <input type="text" class="form-control" id="recipe-name" required placeholder="Ej. Lomo Saltado">
                                         </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Descripción (Para la Propuesta)</label>
+                                            <textarea class="form-control" id="recipe-description" rows="2" placeholder="Ej. Trozos de lomo fino salteados al wok con cebolla y tomate..."></textarea>
+                                        </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-3">
@@ -189,6 +193,7 @@ export const recetasView = {
             document.getElementById('recipe-form').reset();
             document.getElementById('recipe-id').value = '';
             document.getElementById('recipe-image-url').value = '';
+            document.getElementById('recipe-description').value = ''; // Reset desc
             ingredientsList.innerHTML = '';
             addIngredientRow();
             document.getElementById('recipeModalLabel').innerText = "Nueva Receta";
@@ -207,6 +212,7 @@ export const recetasView = {
             document.getElementById('recipe-id').value = id;
             document.getElementById('recipe-name').value = data.nombre;
             document.getElementById('recipe-image-url').value = data.imageUrl || '';
+            document.getElementById('recipe-description').value = data.descripcion || ''; // Load desc
             document.getElementById('recipeModalLabel').innerText = "Editar Receta";
 
             ingredientsList.innerHTML = '';
@@ -260,6 +266,7 @@ export const recetasView = {
 
                 const docData = {
                     nombre: name,
+                    descripcion: document.getElementById('recipe-description').value.trim(), // Save desc
                     imageUrl: imageUrl,
                     ingredientes: ingredients,
                     updatedAt: new Date()

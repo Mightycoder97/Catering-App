@@ -614,7 +614,8 @@ export const presupuestoView = {
                                                      <div class="fw-bold">${item.recipeName}</div>
                                                      <span class="badge bg-success bg-opacity-10 text-success border border-success">${item.pax} pax</span>
                                                  </div>
-                                                 ${item.variant ? `<small class="text-muted fst-italic">${item.variant}</small>` : ''}
+                                                 ${recipe.descripcion ? `<div class="small text-muted mb-2" style="font-size: 0.85rem; line-height: 1.2;">${recipe.descripcion}</div>` : ''}
+                                                 ${item.variant ? `<small class="text-muted fst-italic">Variante: ${item.variant}</small>` : ''}
                                             </div>
                                         </div>
                                     </div>
