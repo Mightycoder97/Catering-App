@@ -304,7 +304,7 @@ export const presupuestoView = {
                             <div class="small">${data.daysCount || 1} días</div>
                             <div class="small text-muted">${data.eventDate || ''}</div>
                         </td>
-                        <td class="text-success">S/. ${(data.totalCost || 0).toFixed(2)}</td>
+                        <td class="text-success">S/. ${(data.totalClient || 0).toFixed(2)}</td>
                         <td class="text-muted small">${dateStr}</td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-info view-btn" data-id="${d.id}"><i class="bi bi-eye"></i></button>
@@ -502,24 +502,33 @@ export const presupuestoView = {
 
         // --- Calculation ---
         const calculateTotal = () => {
-            let total = 0;
+            let totalClient = 0;
+            let totalInternal = 0;
+
             currentBudget.items.forEach(item => {
                 const r = recipesDB.find(x => x.id === item.recipeId);
-                if (r && r.ingredientes) {
-                    let recipeCost = 0;
-                    r.ingredientes.forEach(ing => {
-                        const ins = insumosDB[ing.insumoId];
-                        if (ins) recipeCost += (ing.quantity * ins.costo);
-                    });
-                    total += (recipeCost * item.pax);
+                if (r) {
+                    // Client Price: Sale Price * Pax
+                    totalClient += ((r.precioVenta || 0) * item.pax);
+
+                    // Internal Cost: Ingredients * Pax
+                    if (r.ingredientes) {
+                        let recipeCost = 0;
+                        r.ingredientes.forEach(ing => {
+                            const ins = insumosDB[ing.insumoId];
+                            if (ins) recipeCost += (ing.quantity * ins.costo);
+                        });
+                        totalInternal += (recipeCost * item.pax);
+                    }
                 }
             });
-            return total;
+            return { totalClient, totalInternal };
         };
 
         btnCalculate.addEventListener('click', () => {
-            const t = calculateTotal();
-            displayTotal.innerText = `Total: S/. ${t.toFixed(2)}`;
+            const totals = calculateTotal();
+            // Show Client Price in UI as main total
+            displayTotal.innerText = `Total Venta: S/. ${totals.totalClient.toFixed(2)}`;
         });
 
         // --- Save ---
@@ -546,7 +555,9 @@ export const presupuestoView = {
                 supplies: parseFloat(document.getElementById('cost-supplies').value) || 0
             };
 
-            currentBudget.totalCost = calculateTotal();
+            const totals = calculateTotal();
+            currentBudget.totalClient = totals.totalClient; // Revenue
+            currentBudget.totalCost = totals.totalInternal; // Cost of Goods Sold (Ingredients)
             currentBudget.updatedAt = new Date();
 
             // Validation
@@ -729,7 +740,7 @@ export const presupuestoView = {
                 contentHtml += `
                         <div class="total-section page-break-inside-avoid">
                             <h5 class="text-muted text-uppercase small mb-2">Inversión Total Estimada</h5>
-                            <h2 class="text-success mb-0" style="font-family: 'Helvetica Neue', sans-serif;">S/. ${data.totalCost.toFixed(2)}</h2>
+                            <h2 class="text-success mb-0" style="font-family: 'Helvetica Neue', sans-serif;">S/. ${(data.totalClient || 0).toFixed(2)}</h2>
                         </div>
                         
                         <div class="mt-5 text-center text-muted small fst-italic">

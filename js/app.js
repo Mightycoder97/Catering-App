@@ -1,8 +1,8 @@
-// js/app.js
 import { insumosView } from './insumos.js?v=2';
 import { clientesView } from './clientes.js?v=2';
 import { recetasView } from './recetas.js?v=2';
 import { presupuestoView } from './presupuesto.js?v=2';
+import { reportesView } from './reportes.js?v=2';
 
 class App {
     constructor() {
@@ -11,7 +11,8 @@ class App {
             'insumos': insumosView,
             'recetas': recetasView,
             'presupuesto': presupuestoView,
-            'clientes': clientesView
+            'clientes': clientesView,
+            'reportes': reportesView
         };
         this.currentRoute = null;
     }
