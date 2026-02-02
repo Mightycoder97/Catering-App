@@ -48,34 +48,188 @@ body {
         transform: translateY(0);
     }
 }
-/* Print Styles */
+
+/* Proposal & Print Styles */
+.proposal-sheet {
+    background: white;
+    max-width: 210mm;
+    margin: 0 auto;
+    min-height: 297mm;
+    position: relative;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    font-family: 'Georgia', serif;
+    /* More formal look */
+}
+
+.proposal-header {
+    border-bottom: 2px solid #b58d2a;
+    /* Gold/Bronze accent */
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.proposal-brand {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #333;
+}
+
+.proposal-brand span {
+    color: #b58d2a;
+}
+
+.client-info-table td {
+    padding: 4px 12px;
+    font-size: 14px;
+    color: #555;
+    vertical-align: top;
+}
+
+.client-info-table td.label {
+    font-weight: bold;
+    color: #333;
+    text-align: right;
+    width: 100px;
+}
+
+.meal-section-title {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #b58d2a;
+    border-bottom: 1px solid #eee;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    padding-bottom: 5px;
+}
+
+.recipe-item-minimal {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px dashed #f0f0f0;
+    padding-bottom: 20px;
+}
+
+.recipe-item-minimal:last-child {
+    border-bottom: none;
+}
+
+.recipe-thumb {
+    width: 120px;
+    height: 90px;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid #ddd;
+}
+
+.recipe-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recipe-details {
+    padding-left: 20px;
+    flex-grow: 1;
+}
+
+.recipe-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 4px;
+}
+
+.recipe-desc {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+    font-style: italic;
+    margin-bottom: 6px;
+}
+
+.recipe-meta {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #999;
+    letter-spacing: 0.5px;
+}
+
+.total-section {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: right;
+    margin-top: 40px;
+    border: 1px solid #eee;
+}
+
 @media print {
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+
+    /* Hide everything standard */
     body * {
         visibility: hidden;
     }
-    .modal.show .print-section, .modal.show .print-section * {
-        visibility: visible;
-    }
-    .modal.show .print-section {
+
+    /* Only show modal content properly */
+    #budgetDetailModal {
         position: absolute;
         left: 0;
         top: 0;
-        width: 100%;
         margin: 0;
-        padding: 20px;
-        background: white;
-        color: black;
+        padding: 0;
+        min-height: 100%;
+        width: 100%;
+        visibility: visible;
+        overflow: visible !important;
     }
-    
+
     .modal-dialog {
-        margin: 0 !important;
-        max-width: 100% !important;
+        margin: 0;
+        max-width: 100%;
+        width: 100%;
+        transform: none !important;
     }
+
     .modal-content {
-        border: none !important;
-        box-shadow: none !important;
+        border: none;
+        box-shadow: none;
     }
-    .modal-header, .modal-footer, .btn-close {
+
+    .print-section,
+    .print-section * {
+        visibility: visible;
+    }
+
+    /* Reset Proposal Container for Paper */
+    .proposal-sheet {
+        box-shadow: none;
+        margin: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        /* Let browser handle margins or set specifics */
+        padding-top: 20px;
+    }
+
+    .d-print-none {
         display: none !important;
+    }
+
+    .page-break-inside-avoid {
+        break-inside: avoid;
     }
 }

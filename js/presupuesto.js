@@ -556,23 +556,44 @@ export const presupuestoView = {
             const clientInfo = data.clientId ? (clientsDB[data.clientId] || {}) : {};
 
             let contentHtml = `
-                <div class="print-section">
-                    <div class="row border-bottom pb-4 mb-4 align-items-center">
-                         <div class="col-8">
-                             <h1 class="display-6 fw-bold text-primary mb-0">Propuesta de Catering</h1>
-                             <p class="text-muted small mt-1">Ref: #${data.id.substr(0, 8).toUpperCase()}</p>
-                         </div>
-                         <div class="col-4 text-end">
-                             <div class="fw-bold fs-5">${clientInfo.nombre || data.clientName || 'Cliente'}</div>
-                             <div class="small text-muted">${data.eventDate || 'Fecha por definir'}</div>
-                             <div class="small text-muted">${data.location || ''}</div>
-                             <div class="badge bg-light text-dark mt-2 border">${data.eventName}</div>
-                         </div>
+                <div class="proposal-sheet print-section">
+                    <!-- HEADER -->
+                    <div class="proposal-header d-flex justify-content-between align-items-start">
+                        <div class="proposal-brand">
+                            CATERING<span>PRO</span>
+                        </div>
+                        <div class="text-end">
+                            <table class="client-info-table ms-auto">
+                                <tr>
+                                    <td class="label">CLIENTE</td>
+                                    <td>${clientInfo.nombre || data.clientName || 'Cliente'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">EVENTO</td>
+                                    <td>${data.eventName}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">FECHA</td>
+                                    <td>${data.eventDate || 'Por definir'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">UBICACIÓN</td>
+                                    <td>${data.location || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">REF</td>
+                                    <td>#${data.id.substr(0, 8).toUpperCase()}</td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
+
+                    <!-- BODY -->
+                    <div class="proposal-body">
              `;
 
             if (viewBudgetState.mode === 'client') {
-                // ** CLIENT VIEW: Day > Meal > Item (Pax) with Images **
+                // ** PROFESSIONAL CLIENT VIEW **
                 const days = data.daysCount || 1;
                 for (let d = 1; d <= days; d++) {
                     const dayItems = items.filter(i => i.day === d);
@@ -580,8 +601,11 @@ export const presupuestoView = {
 
                     contentHtml += `
                         <div class="mb-5 page-break-inside-avoid">
-                            <h4 class="bg-primary text-white p-2 rounded ps-3 mb-3">Día ${d}</h4>
-                            <div class="ms-2">
+                            <div class="text-center mb-4">
+                                <span class="bg-light px-4 py-1 rounded-pill fw-bold text-uppercase border" style="font-size: 14px; color: #555;">
+                                    Día ${d}
+                                </span>
+                            </div>
                      `;
 
                     // Group by Meal
@@ -591,47 +615,55 @@ export const presupuestoView = {
                         meals[i.meal].push(i);
                     });
 
-                    const mealOrder = ['Desayuno', 'Almuerzo', 'Cena', 'Coctel', 'Otro'];
+                    const mealOrder = ['Desayuno', 'Almuerzo', 'Cena', 'Coctel', 'Postre', 'Bebida', 'Otro'];
                     mealOrder.forEach(meal => {
                         if (meals[meal]) {
-                            contentHtml += `<h5 class="mt-4 mb-3 text-secondary text-uppercase border-bottom d-inline-block pe-4">${meal}</h5>`;
-                            contentHtml += `<div class="row g-4">`;
+                            contentHtml += `<div class="meal-section-title">${meal}</div>`;
+
                             meals[meal].forEach(item => {
                                 const recipe = recipesDB.find(r => r.id === item.recipeId) || {};
-                                const imgStyle = recipe.imageUrl ? `background-image: url('${recipe.imageUrl}');` : `background-color: #eee;`;
 
                                 contentHtml += `
-                                    <div class="col-md-6 col-print-6">
-                                        <div class="d-flex border rounded overflow-hidden h-100 shadow-sm-hover align-items-center">
-                                            <div style="width: 100px; height: 100px; min-width: 100px; background-color: #eee;">
-                                                <img src="${recipe.imageUrl || 'https://via.placeholder.com/100x100?text=No+Img'}" 
-                                                     alt="${item.recipeName}" 
-                                                     style="width: 100%; height: 100%; object-fit: cover; display: block;"
-                                                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'text-center text-muted small py-4\'>Sin Foto</div>';">
+                                    <div class="recipe-item-minimal">
+                                        <div class="recipe-thumb">
+                                            <img src="${recipe.imageUrl || 'https://via.placeholder.com/150x100?text=No+Img'}" 
+                                                 onerror="this.src='https://via.placeholder.com/150x100?text=Sin+Foto'">
+                                        </div>
+                                        <div class="recipe-details">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="recipe-title">${item.recipeName}</div>
+                                                <div class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success" style="height: fit-content;">${item.pax} pax</div>
                                             </div>
-                                            <div class="p-3 flex-grow-1 d-flex flex-column justify-content-center">
-                                                 <div class="d-flex justify-content-between align-items-start mb-1">
-                                                     <div class="fw-bold">${item.recipeName}</div>
-                                                     <span class="badge bg-success bg-opacity-10 text-success border border-success">${item.pax} pax</span>
-                                                 </div>
-                                                 ${recipe.descripcion ? `<div class="small text-muted mb-2" style="font-size: 0.85rem; line-height: 1.2;">${recipe.descripcion}</div>` : ''}
-                                                 ${item.variant ? `<small class="text-muted fst-italic">Tipo de Menú: ${item.variant}</small>` : ''}
+                                            
+                                            ${recipe.descripcion ? `<div class="recipe-desc">${recipe.descripcion}</div>` : ''}
+                                            
+                                            <div class="recipe-meta mt-1">
+                                                ${item.variant ? `<span class="me-3"><strong>Tipo:</strong> ${item.variant}</span>` : ''}
+                                                ${recipe.tipoComida ? `<span class="me-2 text-primary">• ${recipe.tipoComida}</span>` : ''}
+                                                ${recipe.estiloCocina ? `<span class="me-2 text-muted">• ${recipe.estiloCocina}</span>` : ''}
                                             </div>
                                         </div>
                                     </div>
                                 `;
                             });
-                            contentHtml += `</div>`;
                         }
                     });
 
-                    contentHtml += `</div></div>`;
+                    contentHtml += `</div>`;
                 }
 
                 contentHtml += `
-                    <div class="mt-5 pt-3 border-top text-end">
-                        <h3 class="text-success">Inversión Total Estimada: S/. ${data.totalCost.toFixed(2)}</h3>
-                    </div>
+                        <div class="total-section page-break-inside-avoid">
+                            <h5 class="text-muted text-uppercase small mb-2">Inversión Total Estimada</h5>
+                            <h2 class="text-success mb-0" style="font-family: 'Helvetica Neue', sans-serif;">S/. ${data.totalCost.toFixed(2)}</h2>
+                        </div>
+                        
+                        <div class="mt-5 text-center text-muted small fst-italic">
+                            <p>Gracias por confiar en nosotros para su evento.</p>
+                        </div>
+                        
+                        </div> <!-- End Body -->
+                    </div> <!-- End Sheet -->
                  `;
 
             } else {
@@ -690,9 +722,10 @@ export const presupuestoView = {
                         </tfoot>
                     </table>
                  `;
+
+                contentHtml += `</div></div>`; // Close body and sheet for internal view
             }
 
-            contentHtml += `</div>`;
             detailContent.innerHTML = contentHtml;
         };
 
