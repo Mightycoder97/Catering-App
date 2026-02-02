@@ -560,7 +560,8 @@ export const presupuestoView = {
                     <!-- HEADER -->
                     <div class="proposal-header d-flex justify-content-between align-items-start">
                         <div class="proposal-brand">
-                            CATERING<span>PRO</span>
+                            <div>PAPA N' RES</div>
+                            <div style="font-size: 10px; letter-spacing: 3px; color: #555; text-transform: uppercase; font-weight: normal; margin-top: 5px;">Catering Parrillero y Criollo</div>
                         </div>
                         <div class="text-end">
                             <table class="client-info-table ms-auto">
@@ -579,10 +580,6 @@ export const presupuestoView = {
                                 <tr>
                                     <td class="label">UBICACIÓN</td>
                                     <td>${data.location || '-'}</td>
-                                </tr>
-                                <tr>
-                                    <td class="label">REF</td>
-                                    <td>#${data.id.substr(0, 8).toUpperCase()}</td>
                                 </tr>
                             </table>
                         </div>
@@ -632,14 +629,13 @@ export const presupuestoView = {
                                         <div class="recipe-details">
                                             <div class="d-flex justify-content-between">
                                                 <div class="recipe-title">${item.recipeName}</div>
-                                                <div class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success" style="height: fit-content;">${item.pax} pax</div>
+                                                <div class="badge rounded-pill bg-secondary text-white" style="height: fit-content; font-weight: normal;">${item.pax} pax</div>
                                             </div>
                                             
                                             ${recipe.descripcion ? `<div class="recipe-desc">${recipe.descripcion}</div>` : ''}
                                             
                                             <div class="recipe-meta mt-1">
                                                 ${item.variant ? `<span class="me-3"><strong>Tipo:</strong> ${item.variant}</span>` : ''}
-                                                ${recipe.tipoComida ? `<span class="me-2 text-primary">• ${recipe.tipoComida}</span>` : ''}
                                                 ${recipe.estiloCocina ? `<span class="me-2 text-muted">• ${recipe.estiloCocina}</span>` : ''}
                                             </div>
                                         </div>
