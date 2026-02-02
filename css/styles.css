@@ -1,0 +1,81 @@
+/* css/styles.css */
+body {
+    min-height: 100vh;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.nav-link {
+    cursor: pointer;
+}
+
+.btn-floating {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+/* Transitions */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* Print Styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .modal.show .print-section, .modal.show .print-section * {
+        visibility: visible;
+    }
+    .modal.show .print-section {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: white;
+        color: black;
+    }
+    
+    .modal-dialog {
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    .modal-content {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .modal-header, .modal-footer, .btn-close {
+        display: none !important;
+    }
+}
