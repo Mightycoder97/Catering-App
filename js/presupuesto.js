@@ -255,6 +255,7 @@ export const presupuestoView = {
 
                 snap.forEach(d => {
                     const data = d.data();
+                    data.id = d.id; // Inject ID
                     storedBudgets[d.id] = data;
 
                     const dateStr = data.createdAt?.seconds ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : '-';
