@@ -1,8 +1,8 @@
 // js/app.js
-import { insumosView } from './insumos.js';
-import { clientesView } from './clientes.js';
-import { recetasView } from './recetas.js';
-import { presupuestoView } from './presupuesto.js';
+import { insumosView } from './insumos.js?v=2';
+import { clientesView } from './clientes.js?v=2';
+import { recetasView } from './recetas.js?v=2';
+import { presupuestoView } from './presupuesto.js?v=2';
 
 class App {
     constructor() {
