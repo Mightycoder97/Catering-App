@@ -57,18 +57,51 @@ export const presupuestoView = {
                                     <input type="text" class="form-control" id="event-name" required placeholder="Ej. Boda Civil, Cumpleaños...">
                                 </div>
                                 <div class="col-md-4">
-                                     <label class="form-label">Fecha del Evento</label>
-                                     <input type="date" class="form-control" id="event-date">
+                                     <label class="form-label">Fecha Inicio</label>
+                                     <input type="date" class="form-control" id="event-start-date" required>
                                 </div>
-                                 <div class="col-md-8">
+                                <div class="col-md-4">
+                                     <label class="form-label">Fecha Fin (Cierre)</label>
+                                     <input type="date" class="form-control" id="event-end-date" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Días Calc.</label>
+                                    <input type="number" class="form-control bg-light" id="event-days" value="1" readonly>
+                                </div>
+                                 <div class="col-md-12">
                                      <label class="form-label">Lugar / Dirección</label>
                                      <input type="text" class="form-control" id="event-location">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Duración (Días)</label>
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="event-days" value="1" min="1" required>
-                                        <button class="btn btn-outline-secondary" type="button" id="btn-generate-days">Generar Días</button>
+                                
+                                <div class="col-12 mt-4">
+                                    <h6 class="text-secondary border-bottom pb-2">Gastos Operativos (Interno)</h6>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Transporte / Logística</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">S/.</span>
+                                        <input type="number" class="form-control" id="cost-transport" placeholder="0.00" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Hospedaje / Viáticos</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">S/.</span>
+                                        <input type="number" class="form-control" id="cost-lodging" placeholder="0.00" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Pago Ayudantes</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">S/.</span>
+                                        <input type="number" class="form-control" id="cost-staff" placeholder="0.00" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Compras No Comestibles</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">S/.</span>
+                                        <input type="number" class="form-control" id="cost-supplies" placeholder="0.00" step="0.01">
                                     </div>
                                 </div>
                             </div>
@@ -356,14 +389,33 @@ export const presupuestoView = {
             attachDayListeners();
         };
 
-        btnGenerateDays.addEventListener('click', () => {
-            const count = parseInt(document.getElementById('event-days').value) || 1;
-            currentBudget.daysCount = count;
-            // Warning: regenerate clears items if number reduced or changed? 
-            // Better to keep items if day exists. For now, simple regeneration is fine for MVP but could be annoying.
-            // Let's preserve items if possible.
-            generateDayCards(count);
-        });
+        const inputStart = document.getElementById('event-start-date');
+        const inputEnd = document.getElementById('event-end-date');
+        const inputDays = document.getElementById('event-days');
+
+        const calculateDays = () => {
+            const s = new Date(inputStart.value);
+            const e = new Date(inputEnd.value);
+
+            if (s && e && !isNaN(s) && !isNaN(e)) {
+                if (e < s) {
+                    alert('La fecha fin no puede ser menor a la fecha inicio');
+                    inputEnd.value = inputStart.value;
+                    return;
+                }
+                const diffTime = Math.abs(e - s);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                inputDays.value = diffDays;
+
+                if (currentBudget.daysCount !== diffDays) {
+                    currentBudget.daysCount = diffDays;
+                    generateDayCards(diffDays);
+                }
+            }
+        };
+
+        inputStart.addEventListener('change', calculateDays);
+        inputEnd.addEventListener('change', calculateDays);
 
         const attachDayListeners = () => {
             document.querySelectorAll('.btn-add-item-modal').forEach(btn => {
@@ -479,7 +531,21 @@ export const presupuestoView = {
             currentBudget.clientName = clientSelect.options[clientSelect.selectedIndex].text;
             currentBudget.eventName = document.getElementById('event-name').value;
             currentBudget.location = document.getElementById('event-location').value;
-            currentBudget.eventDate = document.getElementById('event-date').value;
+
+            // Dates
+            currentBudget.startDate = document.getElementById('event-start-date').value;
+            currentBudget.endDate = document.getElementById('event-end-date').value;
+            // eventDate legacy field can be range string
+            currentBudget.eventDate = currentBudget.startDate + ' al ' + currentBudget.endDate;
+
+            // Costs
+            currentBudget.costs = {
+                transport: parseFloat(document.getElementById('cost-transport').value) || 0,
+                lodging: parseFloat(document.getElementById('cost-lodging').value) || 0,
+                staff: parseFloat(document.getElementById('cost-staff').value) || 0,
+                supplies: parseFloat(document.getElementById('cost-supplies').value) || 0
+            };
+
             currentBudget.totalCost = calculateTotal();
             currentBudget.updatedAt = new Date();
 
@@ -523,9 +589,20 @@ export const presupuestoView = {
             // Fill Form
             if (data.clientId) clientSelect.value = data.clientId;
             document.getElementById('event-name').value = data.eventName;
-            document.getElementById('event-days').value = data.daysCount || 1;
             document.getElementById('event-location').value = data.location || '';
-            document.getElementById('event-date').value = data.eventDate || '';
+
+            // Load Dates
+            if (data.startDate) document.getElementById('event-start-date').value = data.startDate;
+            if (data.endDate) document.getElementById('event-end-date').value = data.endDate;
+            document.getElementById('event-days').value = data.daysCount || 1;
+
+            // Load Costs
+            if (data.costs) {
+                document.getElementById('cost-transport').value = data.costs.transport || '';
+                document.getElementById('cost-lodging').value = data.costs.lodging || '';
+                document.getElementById('cost-staff').value = data.costs.staff || '';
+                document.getElementById('cost-supplies').value = data.costs.supplies || '';
+            }
 
             generateDayCards(data.daysCount || 1);
             showForm();
@@ -717,6 +794,58 @@ export const presupuestoView = {
                             </tr>
                         </tfoot>
                     </table>
+                 `;
+
+                const ops = data.costs || { transport: 0, lodging: 0, staff: 0, supplies: 0 };
+                const opsTotal = (ops.transport || 0) + (ops.lodging || 0) + (ops.staff || 0) + (ops.supplies || 0);
+                const totalExpense = grandTotal + opsTotal;
+                const revenue = data.totalCost || 0; // This is the price charged to client? Wait.
+                // NOTE: Currently 'totalCost' is calculated as Food Cost * Pax * (Markup?). 
+                // Wait, logic in calculateTotal is: (Recipe Cost * Pax). 
+                // It seems 'totalCost' IS the budget price (Sales Price). 
+                // NO, earlier logic was Costo Est = Ingredient Cost. 
+                // The user likely wants to set a "Sale Price" separately or assume a markup. 
+                // For now, let's treat "totalCost" as purely INGREDIENT COST (Internal Reference). 
+                // BUT usually a budget proposal shows the PRICE to the client.
+                // The current app calculates "Costo Est" based on Ingredients. 
+                // If the user wants PROFITABILITY, they need a SALES PRICE. 
+                // Since I don't have a "Sales Price" field, I will assume the user manually edits the final price or 
+                // for now I will just list the COSTS breakdown. 
+                // User request: "sacar bien mis gastos". So showing Total Expenses is key.
+
+                contentHtml += `
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="text-secondary border-bottom pb-2">Gastos Operativos</h5>
+                             <table class="table table-sm border">
+                                <tr><td>Transporte</td><td class="text-end">S/. ${(ops.transport || 0).toFixed(2)}</td></tr>
+                                <tr><td>Hospedaje</td><td class="text-end">S/. ${(ops.lodging || 0).toFixed(2)}</td></tr>
+                                <tr><td>Ayudantes</td><td class="text-end">S/. ${(ops.staff || 0).toFixed(2)}</td></tr>
+                                <tr><td>Insumos No Comestibles</td><td class="text-end">S/. ${(ops.supplies || 0).toFixed(2)}</td></tr>
+                                <tr class="fw-bold bg-light"><td>Total Operativo</td><td class="text-end">S/. ${opsTotal.toFixed(2)}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-dark">Resumen de Gastos</h5>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Materia Prima (Comida):</span>
+                                        <span class="fw-bold">S/. ${grandTotal.toFixed(2)}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Gastos Operativos:</span>
+                                        <span class="fw-bold">S/. ${opsTotal.toFixed(2)}</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between fs-5 fw-bold text-danger">
+                                        <span>GASTO TOTAL REAL:</span>
+                                        <span>S/. ${totalExpense.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                  `;
 
                 contentHtml += `</div></div>`; // Close body and sheet for internal view
