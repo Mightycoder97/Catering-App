@@ -3,9 +3,9 @@ import { db, collection, getDocs } from './firebase-config.js';
 export const reportesView = {
     render: async () => {
         return `
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><i class="bi bi-graph-up-arrow me-2"></i>Reporte Financiero</h2>
-                <div class="btn-group">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+                <h2 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Reporte Financiero</h2>
+                <div class="btn-group w-100 w-md-auto">
                     <button class="btn btn-outline-secondary active filter-btn" data-filter="week">Esta Semana</button>
                     <button class="btn btn-outline-secondary filter-btn" data-filter="month">Este Mes</button>
                     <button class="btn btn-outline-secondary filter-btn" data-filter="year">Este Año</button>

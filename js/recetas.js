@@ -3,9 +3,9 @@ import { db, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, storage, re
 export const recetasView = {
     render: async () => {
         return `
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><i class="bi bi-journal-text me-2"></i>Recetas / Platos</h2>
-                <button class="btn btn-primary" id="btn-show-create-recipe">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+                <h2 class="mb-0"><i class="bi bi-journal-text me-2"></i>Recetas / Platos</h2>
+                <button class="btn btn-primary w-100 w-md-auto" id="btn-show-create-recipe">
                     <i class="bi bi-plus-lg me-1"></i> Nueva Receta
                 </button>
             </div>

@@ -4,9 +4,9 @@ import { db, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, isDbReady }
 export const insumosView = {
     render: async () => {
         return `
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><i class="bi bi-basket me-2"></i>Insumos</h2>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInsumoModal">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+                <h2 class="mb-0"><i class="bi bi-basket me-2"></i>Insumos</h2>
+                <button class="btn btn-primary w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addInsumoModal">
                     <i class="bi bi-plus-lg me-1"></i> Nuevo Insumo
                 </button>
             </div>

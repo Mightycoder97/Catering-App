@@ -21,18 +21,20 @@ export const presupuestoView = {
             <div id="budget-list-view">
                  <div class="card shadow-sm">
                     <div class="card-body p-0">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Cliente / Evento</th>
-                                    <th>Detalles</th>
-                                    <th>Costo Est.</th>
-                                    <th>Fecha Creación</th>
-                                    <th class="text-end">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="budget-history-table"></tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Cliente / Evento</th>
+                                        <th>Detalles</th>
+                                        <th>Costo Est.</th>
+                                        <th>Fecha Creación</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="budget-history-table"></tbody>
+                            </table>
+                        </div>
                     </div>
                  </div>
             </div>
@@ -767,17 +769,18 @@ export const presupuestoView = {
 
                 contentHtml += `
                     <h4 class="text-danger mb-3"><i class="bi bi-cart"></i> Lista de Compras (Interno)</h4>
-                    <table class="table table-sm table-striped small border">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Insumo</th>
-                                <th>Cantidad Total</th>
-                                <th>Unidad</th>
-                                <th class="text-end">Costo Est.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                 `;
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped small border">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Insumo</th>
+                                    <th>Cantidad Total</th>
+                                    <th>Unidad</th>
+                                    <th class="text-end">Costo Est.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                     `;
 
                 let grandTotal = 0;
                 Object.keys(totalBOM).forEach(id => {
@@ -798,14 +801,15 @@ export const presupuestoView = {
                 });
 
                 contentHtml += `
-                        </tbody>
-                        <tfoot class="table-group-divider bg-light fw-bold">
-                            <tr>
-                                <td colspan="3" class="text-end">Total Materia Prima</td>
-                                <td class="text-end">S/. ${grandTotal.toFixed(2)}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                            </tbody>
+                            <tfoot class="table-group-divider bg-light fw-bold">
+                                <tr>
+                                    <td colspan="3" class="text-end">Total Materia Prima</td>
+                                    <td class="text-end">S/. ${grandTotal.toFixed(2)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                  `;
 
                 const ops = data.costs || { transport: 0, lodging: 0, staff: 0, supplies: 0 };

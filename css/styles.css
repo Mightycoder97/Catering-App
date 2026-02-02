@@ -62,6 +62,69 @@ body {
     /* More formal look */
 }
 
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    /* Make sheet fit screen on mobile preview */
+    .proposal-sheet {
+        padding: 20px;
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none;
+    }
+
+    /* Stack Header elements */
+    .proposal-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .proposal-brand {
+        text-align: center !important;
+        margin-bottom: 20px;
+    }
+
+    .client-info-table {
+        margin: 0 auto;
+    }
+
+    /* Recipe items on mobile */
+    .recipe-item-minimal {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .recipe-thumb {
+        width: 100%;
+        height: 150px;
+        margin-bottom: 15px;
+    }
+
+    .recipe-details {
+        padding-left: 0;
+    }
+
+    .btn {
+        min-height: 44px;
+        /* Touch target size */
+    }
+
+    /* Floating button position for mobile */
+    .btn-floating {
+        bottom: 1rem;
+        right: 1rem;
+    }
+
+    .table-responsive {
+        font-size: 14px;
+    }
+}
+
 .proposal-header {
     border-bottom: 2px solid #b58d2a;
     /* Gold/Bronze accent */
