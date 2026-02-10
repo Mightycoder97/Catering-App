@@ -169,7 +169,7 @@ export const presupuestoView = {
                                     <button type="button" class="btn btn-outline-primary active" id="mode-client">Cliente (Propuesta)</button>
                                     <button type="button" class="btn btn-outline-secondary" id="mode-internal">Interno (Insumos)</button>
                                 </div>
-                                <button type="button" class="btn btn-success" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
+                                <button type="button" class="btn btn-success" id="btn-print-proposal"><i class="bi bi-printer"></i> Imprimir</button>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                         </div>
@@ -1046,6 +1046,93 @@ export const presupuestoView = {
 
         btnModeClient.addEventListener('click', () => { viewBudgetState.mode = 'client'; updateDetailView(); });
         btnModeInternal.addEventListener('click', () => { viewBudgetState.mode = 'internal'; updateDetailView(); });
+
+        // --- Print Proposal in New Window ---
+        document.getElementById('btn-print-proposal').addEventListener('click', () => {
+            const content = document.getElementById('budget-detail-content').innerHTML;
+            const printWin = window.open('', '_blank', 'width=900,height=700');
+            printWin.document.write(`<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<title>Propuesta</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; color: #2c2c2c; line-height: 1.6; padding: 0; margin: 0; background: white; }
+
+.proposal-sheet { max-width: 210mm; margin: 0 auto; padding: 40px 38px; }
+
+.proposal-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #c9a84c; padding-bottom: 24px; margin-bottom: 32px; }
+.proposal-brand { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: #1a1a1a; }
+.proposal-brand span { color: #c9a84c; }
+.proposal-tagline { font-family: 'Inter', sans-serif; font-size: 9px; letter-spacing: 4px; color: #888; text-transform: uppercase; font-weight: 400; margin-top: 5px; }
+
+.client-info-table td { padding: 4px 12px; font-size: 12px; color: #555; vertical-align: top; }
+.client-info-table td.label { font-weight: 600; color: #1a1a1a; text-align: right; width: 90px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; padding-top: 6px; }
+
+.day-divider { margin-bottom: 32px; }
+.day-badge { display: inline-block; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #c9a84c; border: 1px solid #c9a84c; padding: 5px 24px; }
+
+.meal-section-title { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 2px; color: #1a1a1a; border-bottom: 1px solid #e8e8e8; margin-top: 24px; margin-bottom: 14px; padding-bottom: 6px; position: relative; }
+.meal-section-title::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 36px; height: 2px; background: #c9a84c; }
+
+.recipe-item-minimal { display: flex; align-items: flex-start; margin-bottom: 12px; padding: 12px; background: #fafaf8; border-radius: 5px; border: 1px solid #f0ede5; page-break-inside: avoid; break-inside: avoid; }
+.recipe-thumb { width: 90px; height: 68px; border-radius: 5px; overflow: hidden; flex-shrink: 0; }
+.recipe-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.recipe-details { padding-left: 16px; flex: 1; min-width: 0; }
+.recipe-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 15px; font-weight: 700; color: #1a1a1a; }
+.recipe-desc { font-size: 11.5px; color: #777; line-height: 1.4; font-style: italic; margin-top: 2px; }
+.recipe-meta { font-size: 10px; text-transform: uppercase; color: #aaa; letter-spacing: 0.7px; margin-top: 4px; }
+.recipe-pax-badge { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; color: #666; background: #f0ece1; border: 1px solid #e0d9c8; padding: 2px 10px; border-radius: 16px; white-space: nowrap; }
+
+.d-flex { display: flex; }
+.justify-content-between { justify-content: space-between; }
+.align-items-start { align-items: flex-start; }
+.align-items-center { align-items: center; }
+.gap-2 { gap: 8px; }
+.text-center { text-align: center; }
+.mb-2 { margin-bottom: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.ms-2 { margin-left: 8px; }
+.ms-auto { margin-left: auto; }
+.me-2 { margin-right: 8px; }
+.me-3 { margin-right: 12px; }
+.mt-1 { margin-top: 4px; }
+.text-muted { color: #999; }
+.text-end { text-align: right; }
+
+.total-section { background: linear-gradient(135deg, #faf8f3, #f5f0e6); padding: 24px 28px; text-align: right; margin-top: 36px; border: 1px solid #e0d9c8; border-left: 4px solid #c9a84c; page-break-inside: avoid; }
+.total-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 6px; }
+.total-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 30px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; }
+
+.tc-section { margin-top: 36px; padding-top: 20px; border-top: 1px solid #e8e8e8; page-break-inside: avoid; }
+.tc-section h6 { font-family: 'Inter', sans-serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #999; margin-bottom: 12px; font-weight: 600; }
+.tc-text { font-size: 11px; color: #888; line-height: 1.7; white-space: pre-wrap; }
+
+.proposal-footer { margin-top: 40px; text-align: center; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+.proposal-footer p { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 14px; font-style: italic; color: #aaa; letter-spacing: 0.5px; }
+
+@media print {
+    body { margin: 0; padding: 0; }
+    .proposal-sheet { padding: 0; max-width: 100%; }
+    .recipe-item-minimal { background: #fafaf8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .total-section { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .recipe-pax-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @page { margin: 12mm 15mm; }
+}
+</style>
+</head><body>
+${content}
+</body></html>`);
+            printWin.document.close();
+            // Wait for fonts/images to load, then print
+            printWin.onload = () => {
+                setTimeout(() => {
+                    printWin.focus();
+                    printWin.print();
+                }, 400);
+            };
+        });
 
         // --- Quick Add / Edit T&C Logic ---
         const quickTcModalEl = document.getElementById('quickAddTcModal');
