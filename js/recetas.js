@@ -118,9 +118,14 @@ export const recetasView = {
                                 <div class="mb-3">
                                     <label class="form-label d-flex justify-content-between">
                                         Ingredientes
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-add-ingredient-row">
-                                            <i class="bi bi-plus"></i> Agregar Insumo
-                                        </button>
+                                        <div>
+                                            <button type="button" class="btn btn-sm btn-outline-success" id="btn-add-recipe-row">
+                                                <i class="bi bi-journal-text"></i> Incluir Receta
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-add-ingredient-row">
+                                                <i class="bi bi-plus"></i> Agregar Insumo
+                                            </button>
+                                        </div>
                                     </label>
                                     <div id="ingredients-list" class="bg-light p-3 rounded">
                                         <!-- Rows injected here -->
@@ -326,51 +331,57 @@ export const recetasView = {
         };
 
         // Helper: build options HTML for ingredient selects
-        const buildIngredientOptions = (selectedId, selectedType) => {
-            let options = `<option value="">Selecciona insumo o receta...</option>`;
+        // mode: 'all' = both, 'insumo' = only insumos, 'receta' = only recipes
+        const buildIngredientOptions = (selectedId, selectedType, mode = 'all') => {
+            const placeholder = mode === 'receta' ? 'Selecciona receta...' : mode === 'insumo' ? 'Selecciona insumo...' : 'Selecciona insumo o receta...';
+            let options = `<option value="">${placeholder}</option>`;
 
             // --- Recetas optgroup ---
-            const editingId = document.getElementById('recipe-id').value;
-            const availableRecetas = recetasDB.filter(r => r.id !== editingId);
-            if (availableRecetas.length > 0) {
-                options += `<optgroup label="📋 Recetas">`;
-                availableRecetas.sort((a, b) => a.nombre.localeCompare(b.nombre));
-                availableRecetas.forEach(r => {
-                    const sel = (selectedType === 'receta' && selectedId === r.id) ? 'selected' : '';
-                    const costEst = r.ingredientes ? calcRecipeCost(r.ingredientes) : 0;
-                    options += `<option value="receta:${r.id}" ${sel}>${r.nombre} (S/. ${costEst.toFixed(2)}/receta)</option>`;
-                });
-                options += `</optgroup>`;
-            }
-
-            // --- Insumos optgroups ---
-            insumosDB.sort((a, b) => {
-                const catA = a.categoria || 'Otro';
-                const catB = b.categoria || 'Otro';
-                if (catA !== catB) return catA.localeCompare(catB);
-                return a.nombre.localeCompare(b.nombre);
-            });
-
-            const grouped = {};
-            insumosDB.forEach(i => {
-                const cat = i.categoria || 'Otro';
-                if (!grouped[cat]) grouped[cat] = [];
-                grouped[cat].push(i);
-            });
-
-            const catOrder = ['Verdura', 'Fruta', 'Carne', 'Abarrote', 'Lacteo', 'Embutido', 'Licor', 'Menaje', 'Otro'];
-            const allCats = [...new Set([...catOrder, ...Object.keys(grouped)])];
-
-            allCats.forEach(cat => {
-                if (grouped[cat] && grouped[cat].length > 0) {
-                    options += `<optgroup label="${cat}">`;
-                    grouped[cat].forEach(i => {
-                        const sel = (!selectedType || selectedType === 'insumo') && selectedId === i.id ? 'selected' : '';
-                        options += `<option value="insumo:${i.id}" ${sel}>${i.nombre} (S/. ${i.costo}/${i.unidad})</option>`;
+            if (mode === 'all' || mode === 'receta') {
+                const editingId = document.getElementById('recipe-id').value;
+                const availableRecetas = recetasDB.filter(r => r.id !== editingId);
+                if (availableRecetas.length > 0) {
+                    options += `<optgroup label="📋 Recetas">`;
+                    availableRecetas.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                    availableRecetas.forEach(r => {
+                        const sel = (selectedType === 'receta' && selectedId === r.id) ? 'selected' : '';
+                        const costEst = r.ingredientes ? calcRecipeCost(r.ingredientes) : 0;
+                        options += `<option value="receta:${r.id}" ${sel}>${r.nombre} (S/. ${costEst.toFixed(2)}/receta)</option>`;
                     });
                     options += `</optgroup>`;
                 }
-            });
+            }
+
+            // --- Insumos optgroups ---
+            if (mode === 'all' || mode === 'insumo') {
+                insumosDB.sort((a, b) => {
+                    const catA = a.categoria || 'Otro';
+                    const catB = b.categoria || 'Otro';
+                    if (catA !== catB) return catA.localeCompare(catB);
+                    return a.nombre.localeCompare(b.nombre);
+                });
+
+                const grouped = {};
+                insumosDB.forEach(i => {
+                    const cat = i.categoria || 'Otro';
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push(i);
+                });
+
+                const catOrder = ['Verdura', 'Fruta', 'Carne', 'Abarrote', 'Lacteo', 'Embutido', 'Licor', 'Menaje', 'Otro'];
+                const allCats = [...new Set([...catOrder, ...Object.keys(grouped)])];
+
+                allCats.forEach(cat => {
+                    if (grouped[cat] && grouped[cat].length > 0) {
+                        options += `<optgroup label="${cat}">`;
+                        grouped[cat].forEach(i => {
+                            const sel = (!selectedType || selectedType === 'insumo') && selectedId === i.id ? 'selected' : '';
+                            options += `<option value="insumo:${i.id}" ${sel}>${i.nombre} (S/. ${i.costo}/${i.unidad})</option>`;
+                        });
+                        options += `</optgroup>`;
+                    }
+                });
+            }
 
             return options;
         };
@@ -393,20 +404,20 @@ export const recetasView = {
             return cost;
         };
 
-        const addIngredientRow = (data = null) => {
+        const addIngredientRow = (data = null, mode = 'all') => {
             const row = document.createElement('div');
             row.className = 'row g-2 mb-2 ingredient-row align-items-center';
 
             const selectedId = data ? (data.type === 'receta' ? data.recetaId : data.insumoId) : null;
             const selectedType = data ? (data.type || 'insumo') : null;
-            const options = buildIngredientOptions(selectedId, selectedType);
+            const options = buildIngredientOptions(selectedId, selectedType, mode);
 
             row.innerHTML = `
                 <div class="col-7 d-flex">
                     <select class="form-select form-select-sm insumo-select me-1" required>
                         ${options}
                     </select>
-                    <button type="button" class="btn btn-sm btn-outline-success btn-quick-add" title="Crear Insumo">+</button>
+                    ${mode !== 'receta' ? '<button type="button" class="btn btn-sm btn-outline-success btn-quick-add" title="Crear Insumo">+</button>' : ''}
                 </div>
                 <div class="col-3">
                     <input type="number" class="form-control form-control-sm quantity-input" placeholder="Cant." step="0.01" value="${data ? data.quantity : ''}" required>
@@ -418,10 +429,12 @@ export const recetasView = {
 
             row.querySelector('.btn-remove-row').addEventListener('click', () => row.remove());
 
-            // Attach Quick Add
+            // Attach Quick Add (only for non-recipe rows)
             const qaBtn = row.querySelector('.btn-quick-add');
-            const sel = row.querySelector('.insumo-select');
-            attachQuickAddListener(qaBtn, sel);
+            if (qaBtn) {
+                const sel = row.querySelector('.insumo-select');
+                attachQuickAddListener(qaBtn, sel);
+            }
 
             ingredientsList.appendChild(row);
         };
@@ -441,7 +454,8 @@ export const recetasView = {
             modal.show();
         });
 
-        document.getElementById('btn-add-ingredient-row').addEventListener('click', () => addIngredientRow());
+        document.getElementById('btn-add-ingredient-row').addEventListener('click', () => addIngredientRow(null, 'insumo'));
+        document.getElementById('btn-add-recipe-row').addEventListener('click', () => addIngredientRow(null, 'receta'));
 
         const openEdit = async (id) => {
             const snap = await getDocs(collection(db, "recetas")); // Optimizable
@@ -462,7 +476,7 @@ export const recetasView = {
 
             ingredientsList.innerHTML = '';
             if (data.ingredientes && data.ingredientes.length > 0) {
-                data.ingredientes.forEach(ing => addIngredientRow(ing));
+                data.ingredientes.forEach(ing => addIngredientRow(ing, ing.type === 'receta' ? 'receta' : 'insumo'));
             } else {
                 addIngredientRow();
             }
