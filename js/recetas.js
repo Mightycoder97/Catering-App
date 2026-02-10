@@ -621,8 +621,19 @@ export const recetasView = {
                 const btn = e.target.querySelector('button[type="submit"]');
                 btn.disabled = true;
 
+                const nameRaw = document.getElementById('quick-insumo-name').value;
+                const normalized = nameRaw.trim().toLowerCase();
+
+                // Duplicate Check
+                const isDupe = insumosDB.some(i => i.nombre.trim().toLowerCase() === normalized);
+                if (isDupe) {
+                    alert(`El insumo "${nameRaw}" ya existe.`);
+                    btn.disabled = false;
+                    return;
+                }
+
                 const newData = {
-                    nombre: document.getElementById('quick-insumo-name').value,
+                    nombre: nameRaw,
                     categoria: document.getElementById('quick-insumo-cat').value,
                     unidad: document.getElementById('quick-insumo-unit').value,
                     costo: parseFloat(document.getElementById('quick-insumo-cost').value) || 0
