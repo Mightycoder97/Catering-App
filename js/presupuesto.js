@@ -859,7 +859,7 @@ export const presupuestoView = {
                                                 <div class="recipe-title">${item.recipeName}</div>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span class="recipe-pax-badge">${item.pax} personas</span>
-                                                    ${recipe.precioVenta ? `<span class="recipe-pax-badge">S/. ${(recipe.precioVenta * item.pax).toFixed(2)}</span>` : ''}
+                                                    ${recipe.precioVenta ? `<span class="recipe-pax-badge">S/. ${parseFloat(recipe.precioVenta).toFixed(2)} c/u</span>` : ''}
                                                 </div>
                                             </div>
                                             
