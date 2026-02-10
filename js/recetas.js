@@ -49,6 +49,7 @@ export const recetasView = {
             </div>
 
             <!-- Create/Edit Modal -->
+            <!-- Create/Edit Modal -->
              <div class="modal fade" id="recipeModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -133,6 +134,59 @@ export const recetasView = {
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             <button type="button" class="btn btn-primary" id="btn-save-recipe">Guardar Receta</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Add Insumo Modal (Nested) -->
+            <div class="modal fade" id="quickAddInsumoModal" tabindex="-1" style="z-index: 1060;">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header bg-light">
+                            <h6 class="modal-title">Nuevo Insumo Rápido</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="quick-insumo-form">
+                                <div class="mb-2">
+                                    <label class="form-label small">Nombre</label>
+                                    <input type="text" class="form-control form-control-sm" id="quick-insumo-name" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Categoría</label>
+                                    <select class="form-select form-select-sm" id="quick-insumo-cat" required>
+                                        <option value="Verdura">Verdura</option>
+                                        <option value="Fruta">Fruta</option>
+                                        <option value="Carne">Carne</option>
+                                        <option value="Abarrote">Abarrote</option>
+                                        <option value="Lacteo">Lacteo</option>
+                                        <option value="Embutido">Embutido</option>
+                                        <option value="Licor">Licor</option>
+                                        <option value="Menaje">Menaje</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label small">Unidad</label>
+                                        <select class="form-select form-select-sm" id="quick-insumo-unit" required>
+                                            <option value="kg">kg</option>
+                                            <option value="g">g</option>
+                                            <option value="l">l</option>
+                                            <option value="ml">ml</option>
+                                            <option value="und">und</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Costo</label>
+                                        <input type="number" class="form-control form-control-sm" id="quick-insumo-cost" placeholder="0.00" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mt-3 d-grid">
+                                    <button type="submit" class="btn btn-sm btn-success">Guardar e Insertar</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -307,10 +361,11 @@ export const recetasView = {
             });
 
             row.innerHTML = `
-                <div class="col-7">
-                    <select class="form-select form-select-sm insumo-select" required>
+                <div class="col-7 d-flex">
+                    <select class="form-select form-select-sm insumo-select me-1" required>
                         ${options}
                     </select>
+                    <button type="button" class="btn btn-sm btn-outline-success btn-quick-add" title="Crear Insumo">+</button>
                 </div>
                 <div class="col-3">
                     <input type="number" class="form-control form-control-sm quantity-input" placeholder="Cant." step="0.01" value="${data ? data.quantity : ''}" required>
@@ -321,6 +376,12 @@ export const recetasView = {
              `;
 
             row.querySelector('.btn-remove-row').addEventListener('click', () => row.remove());
+
+            // Attach Quick Add
+            const qaBtn = row.querySelector('.btn-quick-add');
+            const sel = row.querySelector('.insumo-select');
+            attachQuickAddListener(qaBtn, sel);
+
             ingredientsList.appendChild(row);
         };
 
@@ -499,6 +560,104 @@ export const recetasView = {
                 console.error("Error updating linked budgets:", e);
             }
         };
+
+        // --- Quick Add Insumo Logic ---
+        let triggeringSelect = null;
+        let quickModal = null; // Initialize later to be safe
+
+        const openQuickAdd = (selectEl) => {
+            if (!quickModal) {
+                const qEl = document.getElementById('quickAddInsumoModal');
+                if (qEl) quickModal = new bootstrap.Modal(qEl);
+            }
+            triggeringSelect = selectEl;
+            document.getElementById('quick-insumo-form').reset();
+            if (quickModal) quickModal.show();
+        };
+
+        const attachQuickAddListener = (btn, select) => {
+            btn.addEventListener('click', () => openQuickAdd(select));
+        };
+
+        // Helper to rebuild options
+        const refreshSelectOptions = (selectElement) => {
+            let options = `<option value="">Selecciona insumo...</option>`;
+
+            // Sort
+            insumosDB.sort((a, b) => {
+                const catA = a.categoria || 'Otro';
+                const catB = b.categoria || 'Otro';
+                if (catA !== catB) return catA.localeCompare(catB);
+                return a.nombre.localeCompare(b.nombre);
+            });
+
+            const grouped = {};
+            insumosDB.forEach(i => {
+                const cat = i.categoria || 'Otro';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(i);
+            });
+
+            const catOrder = ['Verdura', 'Fruta', 'Carne', 'Abarrote', 'Lacteo', 'Embutido', 'Licor', 'Menaje', 'Otro'];
+            const allCats = [...new Set([...catOrder, ...Object.keys(grouped)])];
+
+            allCats.forEach(cat => {
+                if (grouped[cat] && grouped[cat].length > 0) {
+                    options += `<optgroup label="${cat}">`;
+                    grouped[cat].forEach(i => {
+                        options += `<option value="${i.id}">${i.nombre} (S/. ${i.costo}/${i.unidad})</option>`;
+                    });
+                    options += `</optgroup>`;
+                }
+            });
+
+            selectElement.innerHTML = options;
+        };
+
+        const formQuick = document.getElementById('quick-insumo-form');
+        if (formQuick) {
+            formQuick.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = true;
+
+                const newData = {
+                    nombre: document.getElementById('quick-insumo-name').value,
+                    categoria: document.getElementById('quick-insumo-cat').value,
+                    unidad: document.getElementById('quick-insumo-unit').value,
+                    costo: parseFloat(document.getElementById('quick-insumo-cost').value) || 0
+                };
+
+                try {
+                    const ref = await addDoc(collection(db, "insumos"), newData);
+
+                    // Add to local Cache
+                    const newOption = { id: ref.id, ...newData };
+                    insumosDB.push(newOption);
+
+                    // Refresh All Dropdowns
+                    const allSelects = document.querySelectorAll('.insumo-select');
+                    allSelects.forEach(sel => {
+                        const currentVal = sel.value; // Preserve selection
+                        refreshSelectOptions(sel);
+                        sel.value = currentVal;
+                    });
+
+                    // Auto Select in Triggering Element
+                    if (triggeringSelect) {
+                        refreshSelectOptions(triggeringSelect);
+                        triggeringSelect.value = ref.id;
+                    }
+
+                    if (quickModal) quickModal.hide();
+                } catch (err) {
+                    console.error(err);
+                    alert("Error creando insumo: " + err.message);
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        }
 
         init();
     }
