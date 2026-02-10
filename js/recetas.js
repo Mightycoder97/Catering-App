@@ -682,7 +682,7 @@ export const recetasView = {
                     // Auto Select in Triggering Element
                     if (triggeringSelect) {
                         refreshSelectOptions(triggeringSelect);
-                        triggeringSelect.value = ref.id;
+                        triggeringSelect.value = 'insumo:' + ref.id;
                     }
 
                     if (quickModal) quickModal.hide();
