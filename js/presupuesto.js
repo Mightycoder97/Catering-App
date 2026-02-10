@@ -519,6 +519,40 @@ export const presupuestoView = {
 
 
         // --- Calculation ---
+        // Helper: recursively flatten recipe ingredients to insumo costs
+        const getInsumoCostFromIngredients = (ingredientes, recipesDB, insumosDB, visited = new Set()) => {
+            let cost = 0;
+            ingredientes.forEach(ing => {
+                if (ing.type === 'receta') {
+                    const sub = recipesDB.find(r => r.id === ing.recetaId);
+                    if (sub && sub.ingredientes && !visited.has(ing.recetaId)) {
+                        visited.add(ing.recetaId);
+                        cost += ing.quantity * getInsumoCostFromIngredients(sub.ingredientes, recipesDB, insumosDB, visited);
+                    }
+                } else {
+                    const ins = insumosDB[ing.insumoId];
+                    if (ins) cost += (ing.quantity * ins.costo);
+                }
+            });
+            return cost;
+        };
+
+        // Helper: recursively collect insumo quantities from ingredients (for BOM)
+        const collectInsumos = (ingredientes, scale, recipesDB, bom, visited = new Set()) => {
+            ingredientes.forEach(ing => {
+                if (ing.type === 'receta') {
+                    const sub = recipesDB.find(r => r.id === ing.recetaId);
+                    if (sub && sub.ingredientes && !visited.has(ing.recetaId)) {
+                        visited.add(ing.recetaId);
+                        collectInsumos(sub.ingredientes, scale * ing.quantity, recipesDB, bom, visited);
+                    }
+                } else {
+                    if (!bom[ing.insumoId]) bom[ing.insumoId] = 0;
+                    bom[ing.insumoId] += (ing.quantity * scale);
+                }
+            });
+        };
+
         const calculateTotal = () => {
             let totalClient = 0;
             let totalInternal = 0;
@@ -526,20 +560,13 @@ export const presupuestoView = {
             currentBudget.items.forEach(item => {
                 const r = recipesDB.find(x => x.id === item.recipeId);
                 if (r) {
-                    // Client Price: Sale Price * Pax
                     totalClient += ((r.precioVenta || 0) * item.pax);
 
-                    // Internal Cost: Ingredients * (Pax / Yield)
-                    // If recipe yields 4 portions and event needs 4, scale is 1.
                     const yieldVal = r.baseYield || 1;
                     const scaleFactor = item.pax / yieldVal;
 
                     if (r.ingredientes) {
-                        let recipeBatchCost = 0;
-                        r.ingredientes.forEach(ing => {
-                            const ins = insumosDB[ing.insumoId];
-                            if (ins) recipeBatchCost += (ing.quantity * ins.costo);
-                        });
+                        const recipeBatchCost = getInsumoCostFromIngredients(r.ingredientes, recipesDB, insumosDB);
                         totalInternal += (recipeBatchCost * scaleFactor);
                     }
                 }
@@ -784,10 +811,7 @@ export const presupuestoView = {
                 items.forEach(item => {
                     const r = recipesDB.find(x => x.id === item.recipeId);
                     if (r && r.ingredientes) {
-                        r.ingredientes.forEach(ing => {
-                            if (!totalBOM[ing.insumoId]) totalBOM[ing.insumoId] = 0;
-                            totalBOM[ing.insumoId] += (ing.quantity * item.pax);
-                        });
+                        collectInsumos(r.ingredientes, item.pax, recipesDB, totalBOM);
                     }
                 });
 

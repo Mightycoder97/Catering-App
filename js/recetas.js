@@ -202,13 +202,18 @@ export const recetasView = {
         const ingredientsList = document.getElementById('ingredients-list');
 
         let insumosDB = []; // Cache for selector
+        let recetasDB = []; // Cache for recipe-as-ingredient
 
         const init = async () => {
             if (!isDbReady()) return;
 
-            // Load Insumos for Selector
-            const iSnap = await getDocs(collection(db, "insumos"));
+            // Load Insumos and Recetas for Selector
+            const [iSnap, rSnap] = await Promise.all([
+                getDocs(collection(db, "insumos")),
+                getDocs(collection(db, "recetas"))
+            ]);
             iSnap.forEach(doc => insumosDB.push({ id: doc.id, ...doc.data() }));
+            rSnap.forEach(doc => recetasDB.push({ id: doc.id, ...doc.data() }));
 
             loadRecipes();
         };
@@ -248,10 +253,7 @@ export const recetasView = {
             recipes.forEach(data => {
                 let cost = 0;
                 if (data.ingredientes) {
-                    data.ingredientes.forEach(ing => {
-                        const ins = insumosDB.find(i => i.id === ing.insumoId);
-                        if (ins) cost += (ing.quantity * ins.costo);
-                    });
+                    cost = calcRecipeCost(data.ingredientes);
                 }
 
                 const imgHtml = data.imageUrl
@@ -323,13 +325,25 @@ export const recetasView = {
             });
         };
 
-        const addIngredientRow = (data = null) => {
-            const row = document.createElement('div');
-            row.className = 'row g-2 mb-2 ingredient-row align-items-center';
+        // Helper: build options HTML for ingredient selects
+        const buildIngredientOptions = (selectedId, selectedType) => {
+            let options = `<option value="">Selecciona insumo o receta...</option>`;
 
-            let options = `<option value="">Selecciona insumo...</option>`;
+            // --- Recetas optgroup ---
+            const editingId = document.getElementById('recipe-id').value;
+            const availableRecetas = recetasDB.filter(r => r.id !== editingId);
+            if (availableRecetas.length > 0) {
+                options += `<optgroup label="📋 Recetas">`;
+                availableRecetas.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                availableRecetas.forEach(r => {
+                    const sel = (selectedType === 'receta' && selectedId === r.id) ? 'selected' : '';
+                    const costEst = r.ingredientes ? calcRecipeCost(r.ingredientes) : 0;
+                    options += `<option value="receta:${r.id}" ${sel}>${r.nombre} (S/. ${costEst.toFixed(2)}/receta)</option>`;
+                });
+                options += `</optgroup>`;
+            }
 
-            // Sort by Category then Name
+            // --- Insumos optgroups ---
             insumosDB.sort((a, b) => {
                 const catA = a.categoria || 'Otro';
                 const catB = b.categoria || 'Otro';
@@ -337,7 +351,6 @@ export const recetasView = {
                 return a.nombre.localeCompare(b.nombre);
             });
 
-            // Grouping
             const grouped = {};
             insumosDB.forEach(i => {
                 const cat = i.categoria || 'Otro';
@@ -345,7 +358,6 @@ export const recetasView = {
                 grouped[cat].push(i);
             });
 
-            // Order categories (Standard first, then others)
             const catOrder = ['Verdura', 'Fruta', 'Carne', 'Abarrote', 'Lacteo', 'Embutido', 'Licor', 'Menaje', 'Otro'];
             const allCats = [...new Set([...catOrder, ...Object.keys(grouped)])];
 
@@ -353,12 +365,41 @@ export const recetasView = {
                 if (grouped[cat] && grouped[cat].length > 0) {
                     options += `<optgroup label="${cat}">`;
                     grouped[cat].forEach(i => {
-                        const selected = (data && data.insumoId === i.id) ? 'selected' : '';
-                        options += `<option value="${i.id}" ${selected}>${i.nombre} (S/. ${i.costo}/${i.unidad})</option>`;
+                        const sel = (!selectedType || selectedType === 'insumo') && selectedId === i.id ? 'selected' : '';
+                        options += `<option value="insumo:${i.id}" ${sel}>${i.nombre} (S/. ${i.costo}/${i.unidad})</option>`;
                     });
                     options += `</optgroup>`;
                 }
             });
+
+            return options;
+        };
+
+        // Helper: calculate recipe cost recursively from ingredients
+        const calcRecipeCost = (ingredientes, visited = new Set()) => {
+            let cost = 0;
+            ingredientes.forEach(ing => {
+                if (ing.type === 'receta') {
+                    const subReceta = recetasDB.find(r => r.id === ing.recetaId);
+                    if (subReceta && subReceta.ingredientes && !visited.has(ing.recetaId)) {
+                        visited.add(ing.recetaId);
+                        cost += ing.quantity * calcRecipeCost(subReceta.ingredientes, visited);
+                    }
+                } else {
+                    const ins = insumosDB.find(i => i.id === ing.insumoId);
+                    if (ins) cost += (ing.quantity * ins.costo);
+                }
+            });
+            return cost;
+        };
+
+        const addIngredientRow = (data = null) => {
+            const row = document.createElement('div');
+            row.className = 'row g-2 mb-2 ingredient-row align-items-center';
+
+            const selectedId = data ? (data.type === 'receta' ? data.recetaId : data.insumoId) : null;
+            const selectedType = data ? (data.type || 'insumo') : null;
+            const options = buildIngredientOptions(selectedId, selectedType);
 
             row.innerHTML = `
                 <div class="col-7 d-flex">
@@ -438,10 +479,15 @@ export const recetasView = {
             const rows = document.querySelectorAll('.ingredient-row');
             const ingredients = [];
             rows.forEach(r => {
-                const insumoId = r.querySelector('.insumo-select').value;
+                const rawVal = r.querySelector('.insumo-select').value;
                 const quantity = parseFloat(r.querySelector('.quantity-input').value);
-                if (insumoId && quantity > 0) {
-                    ingredients.push({ insumoId, quantity });
+                if (rawVal && quantity > 0) {
+                    if (rawVal.startsWith('receta:')) {
+                        ingredients.push({ type: 'receta', recetaId: rawVal.replace('receta:', ''), quantity });
+                    } else {
+                        const id = rawVal.startsWith('insumo:') ? rawVal.replace('insumo:', '') : rawVal;
+                        ingredients.push({ type: 'insumo', insumoId: id, quantity });
+                    }
                 }
             });
 
@@ -530,12 +576,7 @@ export const recetasView = {
                             const scaleFactor = item.pax / yieldVal;
 
                             if (r.ingredientes) {
-                                let batchCost = 0;
-                                r.ingredientes.forEach(ing => {
-                                    // insumosDB is [{id, ...}] array. Need lookup.
-                                    const ins = insumosDB.find(x => x.id === ing.insumoId);
-                                    if (ins) batchCost += (ing.quantity * ins.costo);
-                                });
+                                const batchCost = calcRecipeCost(r.ingredientes);
                                 totalInternal += (batchCost * scaleFactor);
                             }
                         }
@@ -579,39 +620,9 @@ export const recetasView = {
             btn.addEventListener('click', () => openQuickAdd(select));
         };
 
-        // Helper to rebuild options
+        // Helper to rebuild options (reuse shared builder)
         const refreshSelectOptions = (selectElement) => {
-            let options = `<option value="">Selecciona insumo...</option>`;
-
-            // Sort
-            insumosDB.sort((a, b) => {
-                const catA = a.categoria || 'Otro';
-                const catB = b.categoria || 'Otro';
-                if (catA !== catB) return catA.localeCompare(catB);
-                return a.nombre.localeCompare(b.nombre);
-            });
-
-            const grouped = {};
-            insumosDB.forEach(i => {
-                const cat = i.categoria || 'Otro';
-                if (!grouped[cat]) grouped[cat] = [];
-                grouped[cat].push(i);
-            });
-
-            const catOrder = ['Verdura', 'Fruta', 'Carne', 'Abarrote', 'Lacteo', 'Embutido', 'Licor', 'Menaje', 'Otro'];
-            const allCats = [...new Set([...catOrder, ...Object.keys(grouped)])];
-
-            allCats.forEach(cat => {
-                if (grouped[cat] && grouped[cat].length > 0) {
-                    options += `<optgroup label="${cat}">`;
-                    grouped[cat].forEach(i => {
-                        options += `<option value="${i.id}">${i.nombre} (S/. ${i.costo}/${i.unidad})</option>`;
-                    });
-                    options += `</optgroup>`;
-                }
-            });
-
-            selectElement.innerHTML = options;
+            selectElement.innerHTML = buildIngredientOptions(null, null);
         };
 
         const formQuick = document.getElementById('quick-insumo-form');
