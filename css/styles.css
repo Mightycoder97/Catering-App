@@ -38,159 +38,152 @@ body {
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Proposal & Print Styles */
+/* ============================
+   PROPOSAL & PRINT STYLES
+   ============================ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
 .proposal-sheet {
     background: white;
     max-width: 210mm;
     margin: 0 auto;
     min-height: 297mm;
     position: relative;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-    padding: 40px;
-    font-family: 'Georgia', serif;
-    /* More formal look */
+    box-shadow: 0 1px 30px rgba(0, 0, 0, 0.08);
+    padding: 50px 45px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13px;
+    color: #2c2c2c;
+    line-height: 1.6;
 }
 
-/* Mobile Optimizations */
-@media (max-width: 768px) {
-    .container {
-        padding-left: 15px;
-        padding-right: 15px;
-    }
-
-    /* Make sheet fit screen on mobile preview */
-    .proposal-sheet {
-        padding: 20px;
-        width: 100%;
-        max-width: 100%;
-        box-shadow: none;
-    }
-
-    /* Stack Header elements */
-    .proposal-header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .proposal-brand {
-        text-align: center !important;
-        margin-bottom: 20px;
-    }
-
-    .client-info-table {
-        margin: 0 auto;
-    }
-
-    /* Recipe items on mobile */
-    .recipe-item-minimal {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .recipe-thumb {
-        width: 100%;
-        height: 150px;
-        margin-bottom: 15px;
-    }
-
-    .recipe-details {
-        padding-left: 0;
-    }
-
-    .btn {
-        min-height: 44px;
-        /* Touch target size */
-    }
-
-    /* Floating button position for mobile */
-    .btn-floating {
-        bottom: 1rem;
-        right: 1rem;
-    }
-
-    .table-responsive {
-        font-size: 14px;
-    }
-}
-
+/* --- Header --- */
 .proposal-header {
-    border-bottom: 2px solid #b58d2a;
-    /* Gold/Bronze accent */
-    padding-bottom: 20px;
-    margin-bottom: 30px;
+    border-bottom: 1px solid #c9a84c;
+    padding-bottom: 28px;
+    margin-bottom: 36px;
+    position: relative;
+}
+
+.proposal-header::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #c9a84c;
+    opacity: 0.3;
 }
 
 .proposal-brand {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 24px;
-    font-weight: 800;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 28px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #333;
+    letter-spacing: 3px;
+    color: #1a1a1a;
 }
 
 .proposal-brand span {
-    color: #b58d2a;
+    color: #c9a84c;
+}
+
+.proposal-tagline {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 400;
+    margin-top: 6px;
 }
 
 .client-info-table td {
-    padding: 4px 12px;
-    font-size: 14px;
+    padding: 5px 14px;
+    font-size: 12.5px;
     color: #555;
     vertical-align: top;
+    font-family: 'Inter', sans-serif;
 }
 
 .client-info-table td.label {
-    font-weight: bold;
-    color: #333;
+    font-weight: 600;
+    color: #1a1a1a;
     text-align: right;
     width: 100px;
-}
-
-.meal-section-title {
-    font-family: 'Helvetica Neue', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: #b58d2a;
-    border-bottom: 1px solid #eee;
-    margin-top: 30px;
-    margin-bottom: 20px;
-    padding-bottom: 5px;
+    padding-top: 7px;
 }
 
+/* --- Day Badge --- */
+.day-badge {
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #c9a84c;
+    border: 1px solid #c9a84c;
+    padding: 6px 28px;
+    border-radius: 0;
+}
+
+/* --- Meal Section --- */
+.meal-section-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 700;
+    font-size: 17px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #1a1a1a;
+    border-bottom: 1px solid #e8e8e8;
+    margin-top: 28px;
+    margin-bottom: 18px;
+    padding-bottom: 8px;
+    position: relative;
+}
+
+.meal-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: #c9a84c;
+}
+
+/* --- Recipe Items --- */
 .recipe-item-minimal {
     display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px dashed #f0f0f0;
-    padding-bottom: 20px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    padding: 14px;
+    background: #fafaf8;
+    border-radius: 6px;
+    border: 1px solid #f0ede5;
 }
 
 .recipe-item-minimal:last-child {
-    border-bottom: none;
+    margin-bottom: 8px;
 }
 
 .recipe-thumb {
-    width: 120px;
-    height: 90px;
-    border-radius: 4px;
+    width: 100px;
+    height: 75px;
+    border-radius: 6px;
     overflow: hidden;
     flex-shrink: 0;
-    border: 1px solid #ddd;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .recipe-thumb img {
@@ -200,99 +193,171 @@ body {
 }
 
 .recipe-details {
-    padding-left: 20px;
+    padding-left: 18px;
     flex-grow: 1;
 }
 
 .recipe-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 16px;
-    font-weight: bold;
-    color: #222;
-    margin-bottom: 4px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+    letter-spacing: 0.3px;
 }
 
 .recipe-desc {
-    font-size: 13px;
-    color: #666;
-    line-height: 1.4;
+    font-size: 12px;
+    color: #777;
+    line-height: 1.5;
     font-style: italic;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .recipe-meta {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #aaa;
+    letter-spacing: 0.8px;
+    font-weight: 500;
+}
+
+.recipe-pax-badge {
+    font-family: 'Inter', sans-serif;
     font-size: 11px;
+    font-weight: 500;
+    color: #666;
+    background: #f0ece1;
+    border: 1px solid #e0d9c8;
+    padding: 3px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* --- Total Section --- */
+.total-section {
+    background: linear-gradient(135deg, #faf8f3 0%, #f5f0e6 100%);
+    padding: 28px 32px;
+    border-radius: 0;
+    text-align: right;
+    margin-top: 44px;
+    border: 1px solid #e0d9c8;
+    border-left: 4px solid #c9a84c;
+    position: relative;
+}
+
+.total-section .total-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: #999;
+    margin-bottom: 8px;
+}
+
+.total-section .total-amount {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: 1px;
+}
+
+/* --- T&C Section --- */
+.tc-section {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid #e8e8e8;
+}
+
+.tc-section h6 {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 14px;
+    font-weight: 600;
+}
+
+.tc-section .tc-text {
+    font-size: 11px;
+    color: #888;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+/* --- Footer --- */
+.proposal-footer {
+    margin-top: 48px;
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.proposal-footer p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 14px;
+    font-style: italic;
+    color: #aaa;
     letter-spacing: 0.5px;
 }
 
-.total-section {
-    background-color: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: right;
-    margin-top: 40px;
-    border: 1px solid #eee;
+/* --- Day divider --- */
+.day-divider {
+    margin-bottom: 40px;
+    page-break-inside: avoid;
 }
 
+/* --- Mobile for Proposal --- */
+@media (max-width: 768px) {
+    .container { padding-left: 15px; padding-right: 15px; }
+    .proposal-sheet { padding: 20px; width: 100%; max-width: 100%; box-shadow: none; }
+    .proposal-header { flex-direction: column; align-items: center; text-align: center; }
+    .proposal-brand { text-align: center !important; margin-bottom: 20px; }
+    .client-info-table { margin: 0 auto; }
+    .recipe-item-minimal { flex-direction: column; text-align: center; }
+    .recipe-thumb { width: 100%; height: 150px; margin-bottom: 15px; }
+    .recipe-details { padding-left: 0; }
+    .btn { min-height: 44px; }
+    .btn-floating { bottom: 1rem; right: 1rem; }
+    .table-responsive { font-size: 14px; }
+}
+
+/* ============================
+   PRINT STYLES
+   ============================ */
 @media print {
-    body {
-        margin: 0;
-        padding: 0;
-        background: white;
-    }
+    body { margin: 0; padding: 0; background: white; }
+    body * { visibility: hidden; }
 
-    /* Hide everything standard */
-    body * {
-        visibility: hidden;
-    }
-
-    /* Only show modal content properly */
     #budgetDetailModal {
         position: absolute;
-        left: 0;
-        top: 0;
-        margin: 0;
-        padding: 0;
-        min-height: 100%;
-        width: 100%;
+        left: 0; top: 0;
+        margin: 0; padding: 0;
+        min-height: 100%; width: 100%;
         visibility: visible;
         overflow: visible !important;
     }
 
-    .modal-dialog {
-        margin: 0;
-        max-width: 100%;
-        width: 100%;
-        transform: none !important;
-    }
+    .modal-dialog { margin: 0; max-width: 100%; width: 100%; transform: none !important; }
+    .modal-content { border: none; box-shadow: none; }
+    .print-section, .print-section * { visibility: visible; }
 
-    .modal-content {
-        border: none;
-        box-shadow: none;
-    }
-
-    .print-section,
-    .print-section * {
-        visibility: visible;
-    }
-
-    /* Reset Proposal Container for Paper */
     .proposal-sheet {
         box-shadow: none;
         margin: 0;
         width: 100%;
         max-width: 100%;
-        padding: 0;
-        /* Let browser handle margins or set specifics */
-        padding-top: 20px;
+        padding: 12mm 15mm;
     }
 
-    .d-print-none {
-        display: none !important;
-    }
+    .proposal-header::after { display: none; }
+    .recipe-item-minimal { background: #fafaf8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .total-section { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-    .page-break-inside-avoid {
-        break-inside: avoid;
-    }
+    .d-print-none { display: none !important; }
+    .page-break-inside-avoid { break-inside: avoid; }
+
+    @page { margin: 8mm; }
 }

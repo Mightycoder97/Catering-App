@@ -782,26 +782,26 @@ export const presupuestoView = {
                     <!-- HEADER -->
                     <div class="proposal-header d-flex justify-content-between align-items-start">
                         <div class="proposal-brand text-center text-md-start">
-                             <img src="images/Logo_papa.png" alt="Logo" style="max-height: 100px; margin-bottom: 10px;" id="proposal-logo">
+                             <img src="images/Logo_papa.png" alt="Logo" style="max-height: 80px; margin-bottom: 8px;" id="proposal-logo">
                             <div>PAPA N' RES</div>
-                            <div style="font-size: 10px; letter-spacing: 3px; color: #555; text-transform: uppercase; font-weight: normal; margin-top: 5px;">Catering Parrillero y Criollo</div>
+                            <div class="proposal-tagline">Catering Parrillero y Criollo</div>
                         </div>
                         <div class="text-end">
                             <table class="client-info-table ms-auto">
                                 <tr>
-                                    <td class="label">CLIENTE</td>
+                                    <td class="label">Cliente</td>
                                     <td>${clientInfo.nombre || data.clientName || 'Cliente'}</td>
                                 </tr>
                                 <tr>
-                                    <td class="label">EVENTO</td>
+                                    <td class="label">Evento</td>
                                     <td>${data.eventName}</td>
                                 </tr>
                                 <tr>
-                                    <td class="label">FECHA</td>
+                                    <td class="label">Fecha</td>
                                     <td>${data.eventDate || 'Por definir'}</td>
                                 </tr>
                                 <tr>
-                                    <td class="label">UBICACIÓN</td>
+                                    <td class="label">Ubicación</td>
                                     <td>${data.location || '-'}</td>
                                 </tr>
                             </table>
@@ -820,9 +820,9 @@ export const presupuestoView = {
                     if (dayItems.length === 0) continue;
 
                     contentHtml += `
-                        <div class="mb-5 page-break-inside-avoid">
+                        <div class="day-divider">
                             <div class="text-center mb-4">
-                                <span class="bg-light px-4 py-1 rounded-pill fw-bold text-uppercase border" style="font-size: 14px; color: #555;">
+                                <span class="day-badge">
                                     Día ${d}
                                 </span>
                             </div>
@@ -850,9 +850,9 @@ export const presupuestoView = {
                                                  onerror="this.src='https://via.placeholder.com/150x100?text=Sin+Foto'">
                                         </div>
                                         <div class="recipe-details">
-                                            <div class="d-flex justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-start">
                                                 <div class="recipe-title">${item.recipeName}</div>
-                                                <div class="badge rounded-pill bg-secondary text-white" style="height: fit-content; font-weight: normal;">${item.pax} personas</div>
+                                                <span class="recipe-pax-badge">${item.pax} personas</span>
                                             </div>
                                             
                                             ${recipe.descripcion ? `<div class="recipe-desc">${recipe.descripcion}</div>` : ''}
@@ -873,24 +873,24 @@ export const presupuestoView = {
 
                 contentHtml += `
                         <div class="total-section page-break-inside-avoid">
-                            <h5 class="text-muted text-uppercase small mb-2">Inversión Total Estimada</h5>
-                            <h2 class="text-success mb-0" style="font-family: 'Helvetica Neue', sans-serif;">S/. ${(data.totalClient || 0).toFixed(2)}</h2>
+                            <div class="total-label">Inversión Total Estimada</div>
+                            <div class="total-amount">S/. ${(data.totalClient || 0).toFixed(2)}</div>
                         </div>
                         
                         ${(() => {
                         const tc = data.tcId ? tcDB.find(t => t.id === data.tcId) : null;
                         if (tc) {
                             return `
-                                    <div class="mt-5 page-break-inside-avoid">
-                                        <h6 class="text-uppercase text-muted small border-bottom pb-2">Términos y Condiciones</h6>
-                                        <div class="small text-muted" style="white-space: pre-wrap;">${tc.texto}</div>
+                                    <div class="tc-section page-break-inside-avoid">
+                                        <h6>Términos y Condiciones</h6>
+                                        <div class="tc-text">${tc.texto}</div>
                                     </div>
                                 `;
                         }
                         return '';
                     })()}
                         
-                        <div class="mt-5 text-center text-muted small fst-italic">
+                        <div class="proposal-footer">
                             <p>Gracias por confiar en nosotros para su evento.</p>
                         </div>
                         
