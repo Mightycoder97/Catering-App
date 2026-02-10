@@ -128,9 +128,12 @@ export const presupuestoView = {
                                     <option value="">Sin T&C</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <button type="button" class="btn btn-sm btn-outline-success w-100" id="btn-quick-add-tc">
-                                    <i class="bi bi-plus-lg"></i> Crear T&C
+                            <div class="col-md-4 d-flex gap-1">
+                                <button type="button" class="btn btn-sm btn-outline-success flex-fill" id="btn-quick-add-tc">
+                                    <i class="bi bi-plus-lg"></i> Crear
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary flex-fill" id="btn-edit-tc" disabled>
+                                    <i class="bi bi-pencil"></i> Editar
                                 </button>
                             </div>
                             <div class="col-12 mt-2">
@@ -211,6 +214,7 @@ export const presupuestoView = {
                                         <option value="Almuerzo" selected>Almuerzo</option>
                                         <option value="Cena">Cena</option>
                                         <option value="Coctel">Coctel / Bocaditos</option>
+                                        <option value="Cremas y Salsas">Cremas y Salsas</option>
                                         <option value="Otro">Otro</option>
                                     </select>
                                 </div>
@@ -237,6 +241,7 @@ export const presupuestoView = {
                                 <div class="mb-3">
                                     <label class="form-label small">Nombre (Tipo de Evento)</label>
                                     <input type="text" class="form-control form-control-sm" id="quick-tc-name" required placeholder="Ej. Evento Corporativo">
+                                    <input type="hidden" id="quick-tc-edit-id">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label small">Texto de Términos y Condiciones</label>
@@ -816,7 +821,7 @@ export const presupuestoView = {
                 // ** PROFESSIONAL CLIENT VIEW **
                 const days = data.daysCount || 1;
                 for (let d = 1; d <= days; d++) {
-                    const dayItems = items.filter(i => i.day === d);
+                    const dayItems = items.filter(i => i.day === d && i.meal !== 'Cremas y Salsas');
                     if (dayItems.length === 0) continue;
 
                     contentHtml += `
@@ -868,6 +873,30 @@ export const presupuestoView = {
                         }
                     });
 
+                    contentHtml += `</div>`;
+                }
+
+                // --- Cremas y Salsas Section (aggregated across all days) ---
+                const cremasItems = items.filter(i => i.meal === 'Cremas y Salsas');
+                if (cremasItems.length > 0) {
+                    contentHtml += `
+                        <div class="day-divider">
+                            <div class="meal-section-title" style="margin-top: 10px;">Cremas y Salsas Incluidas</div>
+                    `;
+                    // Deduplicate by recipeId, aggregate names
+                    const seen = new Set();
+                    cremasItems.forEach(item => {
+                        if (seen.has(item.recipeId)) return;
+                        seen.add(item.recipeId);
+                        const recipe = recipesDB.find(r => r.id === item.recipeId) || {};
+                        contentHtml += `
+                            <div class="d-flex align-items-center mb-2">
+                                <span style="color: #c9a84c; margin-right: 8px;">•</span>
+                                <span class="recipe-title" style="font-size: 14px;">${item.recipeName}</span>
+                                ${recipe.descripcion ? `<span class="recipe-desc ms-2" style="margin-bottom: 0; font-size: 12px;">— ${recipe.descripcion}</span>` : ''}
+                            </div>
+                        `;
+                    });
                     contentHtml += `</div>`;
                 }
 
@@ -1015,12 +1044,32 @@ export const presupuestoView = {
         btnModeClient.addEventListener('click', () => { viewBudgetState.mode = 'client'; updateDetailView(); });
         btnModeInternal.addEventListener('click', () => { viewBudgetState.mode = 'internal'; updateDetailView(); });
 
-        // --- Quick Add T&C Logic ---
+        // --- Quick Add / Edit T&C Logic ---
         const quickTcModalEl = document.getElementById('quickAddTcModal');
         const quickTcModal = quickTcModalEl ? new bootstrap.Modal(quickTcModalEl) : null;
+        const tcModalTitle = quickTcModalEl ? quickTcModalEl.querySelector('.modal-title') : null;
+
+        // Enable/disable edit button based on selection
+        document.getElementById('tc-select').addEventListener('change', () => {
+            document.getElementById('btn-edit-tc').disabled = !document.getElementById('tc-select').value;
+        });
 
         document.getElementById('btn-quick-add-tc').addEventListener('click', () => {
             document.getElementById('quick-tc-form').reset();
+            document.getElementById('quick-tc-edit-id').value = '';
+            if (tcModalTitle) tcModalTitle.textContent = 'Nuevo T&C';
+            if (quickTcModal) quickTcModal.show();
+        });
+
+        document.getElementById('btn-edit-tc').addEventListener('click', () => {
+            const selId = document.getElementById('tc-select').value;
+            if (!selId) return;
+            const tc = tcDB.find(t => t.id === selId);
+            if (!tc) return;
+            document.getElementById('quick-tc-edit-id').value = tc.id;
+            document.getElementById('quick-tc-name').value = tc.nombre;
+            document.getElementById('quick-tc-text').value = tc.texto;
+            if (tcModalTitle) tcModalTitle.textContent = 'Editar T&C';
             if (quickTcModal) quickTcModal.show();
         });
 
@@ -1031,24 +1080,35 @@ export const presupuestoView = {
                 const btn = e.target.querySelector('button[type="submit"]');
                 btn.disabled = true;
 
+                const editId = document.getElementById('quick-tc-edit-id').value;
                 const nombre = document.getElementById('quick-tc-name').value.trim();
                 const texto = document.getElementById('quick-tc-text').value.trim();
 
                 if (!nombre || !texto) { btn.disabled = false; return; }
 
                 try {
-                    const docRef = await addDoc(collection(db, "termsConditions"), { nombre, texto, createdAt: new Date() });
-                    tcDB.push({ id: docRef.id, nombre, texto });
-                    refreshTcSelect();
-
-                    // Auto-select
-                    document.getElementById('tc-select').value = docRef.id;
-                    document.getElementById('tc-preview').textContent = texto;
+                    if (editId) {
+                        // Update existing
+                        await updateDoc(doc(db, "termsConditions", editId), { nombre, texto });
+                        const idx = tcDB.findIndex(t => t.id === editId);
+                        if (idx !== -1) { tcDB[idx].nombre = nombre; tcDB[idx].texto = texto; }
+                        refreshTcSelect();
+                        document.getElementById('tc-select').value = editId;
+                        document.getElementById('tc-preview').textContent = texto;
+                    } else {
+                        // Create new
+                        const docRef = await addDoc(collection(db, "termsConditions"), { nombre, texto, createdAt: new Date() });
+                        tcDB.push({ id: docRef.id, nombre, texto });
+                        refreshTcSelect();
+                        document.getElementById('tc-select').value = docRef.id;
+                        document.getElementById('tc-preview').textContent = texto;
+                        document.getElementById('btn-edit-tc').disabled = false;
+                    }
 
                     if (quickTcModal) quickTcModal.hide();
                 } catch (err) {
                     console.error(err);
-                    alert("Error creando T&C: " + err.message);
+                    alert("Error guardando T&C: " + err.message);
                 } finally {
                     btn.disabled = false;
                 }

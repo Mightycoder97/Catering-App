@@ -24,6 +24,7 @@ export const recetasView = {
                                 <option value="Piqueo">Piqueo</option>
                                 <option value="Postre">Postre</option>
                                 <option value="Bebida">Bebida</option>
+                                <option value="Cremas y Salsas">Cremas y Salsas</option>
                                 <option value="Otro">Otro</option>
                             </select>
                         </div>
@@ -97,6 +98,7 @@ export const recetasView = {
                                                 <option value="Piqueo">Piqueo</option>
                                                 <option value="Postre">Postre</option>
                                                 <option value="Bebida">Bebida</option>
+                                                <option value="Cremas y Salsas">Cremas y Salsas</option>
                                                 <option value="Otro">Otro</option>
                                             </select>
                                         </div>
