@@ -36,6 +36,7 @@ export const recetasView = {
                                 <option value="Americano">Americano</option>
                                 <option value="Asiático">Asiático</option>
                                 <option value="Fusión">Fusión</option>
+                                <option value="Parrilla">Parrilla</option>
                                 <option value="Otro">Otro</option>
                             </select>
                         </div>
@@ -109,6 +110,7 @@ export const recetasView = {
                                                 <option value="Americano">Americano</option>
                                                 <option value="Asiático">Asiático</option>
                                                 <option value="Fusión">Fusión</option>
+                                                <option value="Parrilla">Parrilla</option>
                                                 <option value="Otro">Otro</option>
                                             </select>
                                         </div>
