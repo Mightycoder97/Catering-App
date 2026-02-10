@@ -826,11 +826,11 @@ export const presupuestoView = {
 
                     contentHtml += `
                         <div class="day-divider">
-                            <div class="text-center mb-4">
+                            ${days > 1 ? `<div class="text-center mb-4">
                                 <span class="day-badge">
                                     Día ${d}
                                 </span>
-                            </div>
+                            </div>` : ''}
                      `;
 
                     // Group by Meal
@@ -857,7 +857,10 @@ export const presupuestoView = {
                                         <div class="recipe-details">
                                             <div class="d-flex justify-content-between align-items-start">
                                                 <div class="recipe-title">${item.recipeName}</div>
-                                                <span class="recipe-pax-badge">${item.pax} personas</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="recipe-pax-badge">${item.pax} personas</span>
+                                                    ${recipe.precioVenta ? `<span class="recipe-pax-badge">S/. ${(recipe.precioVenta * item.pax).toFixed(2)}</span>` : ''}
+                                                </div>
                                             </div>
                                             
                                             ${recipe.descripcion ? `<div class="recipe-desc">${recipe.descripcion}</div>` : ''}
@@ -902,7 +905,7 @@ export const presupuestoView = {
 
                 contentHtml += `
                         <div class="total-section page-break-inside-avoid">
-                            <div class="total-label">Inversión Total Estimada</div>
+                            <div class="total-label">Total</div>
                             <div class="total-amount">S/. ${(data.totalClient || 0).toFixed(2)}</div>
                         </div>
                         
