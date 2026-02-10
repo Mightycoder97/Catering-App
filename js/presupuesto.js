@@ -119,6 +119,23 @@ export const presupuestoView = {
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="col-12 mt-4">
+                                <h6 class="text-secondary border-bottom pb-2">Términos y Condiciones</h6>
+                            </div>
+                            <div class="col-md-8">
+                                <select class="form-select form-select-sm" id="tc-select">
+                                    <option value="">Sin T&C</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-sm btn-outline-success w-100" id="btn-quick-add-tc">
+                                    <i class="bi bi-plus-lg"></i> Crear T&C
+                                </button>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <div id="tc-preview" class="border rounded p-2 bg-white small text-muted" style="min-height: 40px; white-space: pre-wrap;">Selecciona un T&C para ver la vista previa</div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -179,7 +196,7 @@ export const presupuestoView = {
                                 </div>
                                 <div class="row">
                                     <div class="col-6 mb-3">
-                                        <label class="form-label">Cantidad (Pax)</label>
+                                        <label class="form-label">Cantidad (Personas)</label>
                                         <input type="number" class="form-control" id="modal-item-pax" required>
                                     </div>
                                     <div class="col-6 mb-3">
@@ -202,6 +219,33 @@ export const presupuestoView = {
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             <button type="button" class="btn btn-primary" id="btn-confirm-add-item">Agregar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Add T&C Modal -->
+            <div class="modal fade" id="quickAddTcModal" tabindex="-1" style="z-index: 1060;">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-light">
+                            <h6 class="modal-title">Nuevo T&C</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="quick-tc-form">
+                                <div class="mb-3">
+                                    <label class="form-label small">Nombre (Tipo de Evento)</label>
+                                    <input type="text" class="form-control form-control-sm" id="quick-tc-name" required placeholder="Ej. Evento Corporativo">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small">Texto de Términos y Condiciones</label>
+                                    <textarea class="form-control form-control-sm" id="quick-tc-text" rows="6" required placeholder="1. El precio incluye...&#10;2. Se requiere un anticipo de...&#10;3. ..."></textarea>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-sm btn-success">Guardar T&C</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -243,6 +287,7 @@ export const presupuestoView = {
         let recipesDB = [];
         let insumosDB = {};
         let clientsDB = {};
+        let tcDB = []; // Terms & Conditions cache
         let storedBudgets = {}; // Cache
 
         // New Data Model State
@@ -264,10 +309,11 @@ export const presupuestoView = {
             if (!isDbReady()) return;
 
             // Load Insumos, Recetas, Clientes
-            const [iSnap, rSnap, cSnap] = await Promise.all([
+            const [iSnap, rSnap, cSnap, tcSnap] = await Promise.all([
                 getDocs(collection(db, "insumos")),
                 getDocs(collection(db, "recetas")),
-                getDocs(collection(db, "clientes"))
+                getDocs(collection(db, "clientes")),
+                getDocs(collection(db, "termsConditions"))
             ]);
 
             iSnap.forEach(d => insumosDB[d.id] = d.data());
@@ -285,8 +331,32 @@ export const presupuestoView = {
                 clientSelect.innerHTML += `<option value="${d.id}">${d.data().nombre}</option>`;
             });
 
+            // Load T&C
+            const tcSelect = document.getElementById('tc-select');
+            tcDB = [];
+            tcSnap.forEach(d => {
+                tcDB.push({ id: d.id, ...d.data() });
+            });
+            refreshTcSelect();
+
+            // T&C preview on change
+            tcSelect.addEventListener('change', () => {
+                const tc = tcDB.find(t => t.id === tcSelect.value);
+                document.getElementById('tc-preview').textContent = tc ? tc.texto : 'Selecciona un T&C para ver la vista previa';
+            });
+
             loadHistory();
             showList();
+        };
+
+        const refreshTcSelect = () => {
+            const tcSelect = document.getElementById('tc-select');
+            const currentVal = tcSelect.value;
+            tcSelect.innerHTML = '<option value="">Sin T&C</option>';
+            tcDB.forEach(tc => {
+                tcSelect.innerHTML += `<option value="${tc.id}">${tc.nombre}</option>`;
+            });
+            tcSelect.value = currentVal;
         };
 
         const loadHistory = async () => {
@@ -373,9 +443,11 @@ export const presupuestoView = {
 
         // --- Plan Logic ---
         const resetForm = () => {
-            currentBudget = { id: null, clientId: '', clientName: '', eventName: '', location: '', eventDate: '', daysCount: 1, items: [], status: 'Creado' };
+            currentBudget = { id: null, clientId: '', clientName: '', eventName: '', location: '', eventDate: '', daysCount: 1, items: [], status: 'Creado', tcId: '' };
             mainForm.reset();
             document.getElementById('budget-status-select').value = 'Creado';
+            document.getElementById('tc-select').value = '';
+            document.getElementById('tc-preview').textContent = 'Selecciona un T&C para ver la vista previa';
             daysContainer.innerHTML = '';
             displayTotal.innerText = "Total: $0.00";
         };
@@ -465,7 +537,7 @@ export const presupuestoView = {
                             <div>${item.recipeName}</div>
                             <div class="text-muted small" style="font-size: 0.75rem">
                                 ${item.variant ? `(${item.variant}) ` : ''} 
-                                <i class="bi bi-people"></i> ${item.pax} pax
+                                <i class="bi bi-people"></i> ${item.pax} personas
                             </div>
                         </div>
                         <button type="button" class="btn btn-sm text-danger btn-remove-item" data-idx="${idx}"><i class="bi bi-x"></i></button>
@@ -594,7 +666,8 @@ export const presupuestoView = {
             currentBudget.startDate = document.getElementById('event-start-date').value;
             currentBudget.endDate = document.getElementById('event-end-date').value;
             // eventDate legacy field can be range string
-            currentBudget.eventDate = currentBudget.startDate + ' al ' + currentBudget.endDate;
+            const days = parseInt(document.getElementById('event-days').value) || 1;
+            currentBudget.eventDate = days <= 1 ? currentBudget.startDate : (currentBudget.startDate + ' al ' + currentBudget.endDate);
 
             // Costs
             currentBudget.costs = {
@@ -604,8 +677,9 @@ export const presupuestoView = {
                 supplies: parseFloat(document.getElementById('cost-supplies').value) || 0
             };
 
-            // Status
+            // Status & T&C
             currentBudget.status = document.getElementById('budget-status-select').value;
+            currentBudget.tcId = document.getElementById('tc-select').value || '';
 
             const totals = calculateTotal();
             currentBudget.totalClient = totals.totalClient; // Revenue
@@ -666,6 +740,13 @@ export const presupuestoView = {
                 document.getElementById('cost-lodging').value = data.costs.lodging || '';
                 document.getElementById('cost-staff').value = data.costs.staff || '';
                 document.getElementById('cost-supplies').value = data.costs.supplies || '';
+            }
+
+            // Load T&C
+            if (data.tcId) {
+                document.getElementById('tc-select').value = data.tcId;
+                const tc = tcDB.find(t => t.id === data.tcId);
+                document.getElementById('tc-preview').textContent = tc ? tc.texto : '';
             }
 
             generateDayCards(data.daysCount || 1);
@@ -771,7 +852,7 @@ export const presupuestoView = {
                                         <div class="recipe-details">
                                             <div class="d-flex justify-content-between">
                                                 <div class="recipe-title">${item.recipeName}</div>
-                                                <div class="badge rounded-pill bg-secondary text-white" style="height: fit-content; font-weight: normal;">${item.pax} pax</div>
+                                                <div class="badge rounded-pill bg-secondary text-white" style="height: fit-content; font-weight: normal;">${item.pax} personas</div>
                                             </div>
                                             
                                             ${recipe.descripcion ? `<div class="recipe-desc">${recipe.descripcion}</div>` : ''}
@@ -795,6 +876,19 @@ export const presupuestoView = {
                             <h5 class="text-muted text-uppercase small mb-2">Inversión Total Estimada</h5>
                             <h2 class="text-success mb-0" style="font-family: 'Helvetica Neue', sans-serif;">S/. ${(data.totalClient || 0).toFixed(2)}</h2>
                         </div>
+                        
+                        ${(() => {
+                        const tc = data.tcId ? tcDB.find(t => t.id === data.tcId) : null;
+                        if (tc) {
+                            return `
+                                    <div class="mt-5 page-break-inside-avoid">
+                                        <h6 class="text-uppercase text-muted small border-bottom pb-2">Términos y Condiciones</h6>
+                                        <div class="small text-muted" style="white-space: pre-wrap;">${tc.texto}</div>
+                                    </div>
+                                `;
+                        }
+                        return '';
+                    })()}
                         
                         <div class="mt-5 text-center text-muted small fst-italic">
                             <p>Gracias por confiar en nosotros para su evento.</p>
@@ -921,6 +1015,45 @@ export const presupuestoView = {
         btnModeClient.addEventListener('click', () => { viewBudgetState.mode = 'client'; updateDetailView(); });
         btnModeInternal.addEventListener('click', () => { viewBudgetState.mode = 'internal'; updateDetailView(); });
 
+        // --- Quick Add T&C Logic ---
+        const quickTcModalEl = document.getElementById('quickAddTcModal');
+        const quickTcModal = quickTcModalEl ? new bootstrap.Modal(quickTcModalEl) : null;
+
+        document.getElementById('btn-quick-add-tc').addEventListener('click', () => {
+            document.getElementById('quick-tc-form').reset();
+            if (quickTcModal) quickTcModal.show();
+        });
+
+        const quickTcForm = document.getElementById('quick-tc-form');
+        if (quickTcForm) {
+            quickTcForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = true;
+
+                const nombre = document.getElementById('quick-tc-name').value.trim();
+                const texto = document.getElementById('quick-tc-text').value.trim();
+
+                if (!nombre || !texto) { btn.disabled = false; return; }
+
+                try {
+                    const docRef = await addDoc(collection(db, "termsConditions"), { nombre, texto, createdAt: new Date() });
+                    tcDB.push({ id: docRef.id, nombre, texto });
+                    refreshTcSelect();
+
+                    // Auto-select
+                    document.getElementById('tc-select').value = docRef.id;
+                    document.getElementById('tc-preview').textContent = texto;
+
+                    if (quickTcModal) quickTcModal.hide();
+                } catch (err) {
+                    console.error(err);
+                    alert("Error creando T&C: " + err.message);
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        }
 
         await init();
     }
