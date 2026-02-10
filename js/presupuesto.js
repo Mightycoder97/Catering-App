@@ -27,6 +27,7 @@ export const presupuestoView = {
                                     <tr>
                                         <th>Cliente / Evento</th>
                                         <th>Detalles</th>
+                                        <th>Estado</th>
                                         <th>Costo Est.</th>
                                         <th>Fecha Creación</th>
                                         <th class="text-end">Acciones</th>
@@ -42,11 +43,22 @@ export const presupuestoView = {
             <!-- VIEW 2: Calculator/Form (Hidden by Default) -->
             <div id="budget-form-view" class="d-none">
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Configuración del Evento</h5>
+                        <div class="d-flex align-items-center">
+                             <span class="me-2 small text-white-50">Estado:</span>
+                             <select class="form-select form-select-sm" id="budget-status-select" style="width: auto;">
+                                <option value="Creado">Creado</option>
+                                <option value="Enviado">Enviado</option>
+                                <option value="Aceptado">Aceptado</option>
+                                <option value="Programado">Programado</option>
+                                <option value="Realizado">Realizado</option>
+                             </select>
+                        </div>
                     </div>
                     <div class="card-body">
                         <form id="presupuesto-main-form">
+                            <!-- ... (Correct, we are keeping the form internal content same) ... -->
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Cliente</label>
@@ -120,8 +132,8 @@ export const presupuestoView = {
                  <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded border sticky-bottom mb-5">
                     <h3 class="mb-0" id="display-total-cost">Total: S/. 0.00</h3>
                     <div class="d-flex gap-2">
-                         <button class="btn btn-success btn-lg" id="btn-calculate"><i class="bi bi-calculator"></i> Calcular</button>
-                         <button class="btn btn-primary btn-lg" id="btn-save-budget"><i class="bi bi-save"></i> Guardar Presupuesto</button>
+                         <button class="btn btn-success" id="btn-calculate"><i class="bi bi-calculator"></i> Calcular</button>
+                         <button class="btn btn-primary" id="btn-save-budget"><i class="bi bi-save"></i> Guardar Presupuesto</button>
                     </div>
                 </div>
             </div>
@@ -306,6 +318,9 @@ export const presupuestoView = {
                             <div class="small">${data.daysCount || 1} días</div>
                             <div class="small text-muted">${data.eventDate || ''}</div>
                         </td>
+                        <td>
+                            <span class="badge bg-secondary status-badge" data-status="${data.status || 'Creado'}">${data.status || 'Creado'}</span>
+                        </td>
                         <td class="text-success">S/. ${(data.totalClient || 0).toFixed(2)}</td>
                         <td class="text-muted small">${dateStr}</td>
                         <td class="text-end">
@@ -358,8 +373,9 @@ export const presupuestoView = {
 
         // --- Plan Logic ---
         const resetForm = () => {
-            currentBudget = { id: null, clientId: '', clientName: '', eventName: '', location: '', eventDate: '', daysCount: 1, items: [] };
+            currentBudget = { id: null, clientId: '', clientName: '', eventName: '', location: '', eventDate: '', daysCount: 1, items: [], status: 'Creado' };
             mainForm.reset();
+            document.getElementById('budget-status-select').value = 'Creado';
             daysContainer.innerHTML = '';
             displayTotal.innerText = "Total: $0.00";
         };
@@ -513,14 +529,18 @@ export const presupuestoView = {
                     // Client Price: Sale Price * Pax
                     totalClient += ((r.precioVenta || 0) * item.pax);
 
-                    // Internal Cost: Ingredients * Pax
+                    // Internal Cost: Ingredients * (Pax / Yield)
+                    // If recipe yields 4 portions and event needs 4, scale is 1.
+                    const yieldVal = r.baseYield || 1;
+                    const scaleFactor = item.pax / yieldVal;
+
                     if (r.ingredientes) {
-                        let recipeCost = 0;
+                        let recipeBatchCost = 0;
                         r.ingredientes.forEach(ing => {
                             const ins = insumosDB[ing.insumoId];
-                            if (ins) recipeCost += (ing.quantity * ins.costo);
+                            if (ins) recipeBatchCost += (ing.quantity * ins.costo);
                         });
-                        totalInternal += (recipeCost * item.pax);
+                        totalInternal += (recipeBatchCost * scaleFactor);
                     }
                 }
             });
@@ -556,6 +576,9 @@ export const presupuestoView = {
                 staff: parseFloat(document.getElementById('cost-staff').value) || 0,
                 supplies: parseFloat(document.getElementById('cost-supplies').value) || 0
             };
+
+            // Status
+            currentBudget.status = document.getElementById('budget-status-select').value;
 
             const totals = calculateTotal();
             currentBudget.totalClient = totals.totalClient; // Revenue
@@ -603,6 +626,7 @@ export const presupuestoView = {
             if (data.clientId) clientSelect.value = data.clientId;
             document.getElementById('event-name').value = data.eventName;
             document.getElementById('event-location').value = data.location || '';
+            document.getElementById('budget-status-select').value = data.status || 'Creado';
 
             // Load Dates
             if (data.startDate) document.getElementById('event-start-date').value = data.startDate;

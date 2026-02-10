@@ -66,8 +66,13 @@ export const recetasView = {
                                             <input type="text" class="form-control" id="recipe-name" required placeholder="Ej. Lomo Saltado">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Precio de Venta (S/.)</label>
+                                            <label class="form-label">Precio de Venta (S/.) (Por Persona)</label>
                                             <input type="number" class="form-control" id="recipe-sale-price" placeholder="0.00" step="0.01">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Rendimiento Base (Porciones)</label>
+                                            <input type="number" class="form-control" id="recipe-base-yield" value="1" min="1" required>
+                                            <div class="form-text small">Indica para cuántas personas es esta lista de ingredientes.</div>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Descripción (Para la Propuesta)</label>
@@ -269,9 +274,36 @@ export const recetasView = {
             row.className = 'row g-2 mb-2 ingredient-row align-items-center';
 
             let options = `<option value="">Selecciona insumo...</option>`;
+
+            // Sort by Category then Name
+            insumosDB.sort((a, b) => {
+                const catA = a.categoria || 'Otro';
+                const catB = b.categoria || 'Otro';
+                if (catA !== catB) return catA.localeCompare(catB);
+                return a.nombre.localeCompare(b.nombre);
+            });
+
+            // Grouping
+            const grouped = {};
             insumosDB.forEach(i => {
-                const selected = (data && data.insumoId === i.id) ? 'selected' : '';
-                options += `<option value="${i.id}" ${selected}>${i.nombre} (S/. ${i.costo}/${i.unidad})</option>`;
+                const cat = i.categoria || 'Otro';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(i);
+            });
+
+            // Order categories (Standard first, then others)
+            const catOrder = ['Verdura', 'Fruta', 'Carne', 'Abarrote', 'Lacteo', 'Embutido', 'Licor', 'Menaje', 'Otro'];
+            const allCats = [...new Set([...catOrder, ...Object.keys(grouped)])];
+
+            allCats.forEach(cat => {
+                if (grouped[cat] && grouped[cat].length > 0) {
+                    options += `<optgroup label="${cat}">`;
+                    grouped[cat].forEach(i => {
+                        const selected = (data && data.insumoId === i.id) ? 'selected' : '';
+                        options += `<option value="${i.id}" ${selected}>${i.nombre} (S/. ${i.costo}/${i.unidad})</option>`;
+                    });
+                    options += `</optgroup>`;
+                }
             });
 
             row.innerHTML = `
@@ -297,7 +329,7 @@ export const recetasView = {
             document.getElementById('recipe-sale-price').value = '';
             document.getElementById('recipe-id').value = '';
             document.getElementById('recipe-image-url').value = '';
-            document.getElementById('recipe-image-url').value = '';
+            document.getElementById('recipe-base-yield').value = '1';
             document.getElementById('recipe-description').value = ''; // Reset desc
             document.getElementById('recipe-meal-type').value = '';
             document.getElementById('recipe-cuisine-style').value = '';
@@ -319,6 +351,7 @@ export const recetasView = {
             document.getElementById('recipe-id').value = id;
             document.getElementById('recipe-name').value = data.nombre;
             document.getElementById('recipe-sale-price').value = data.precioVenta || '';
+            document.getElementById('recipe-base-yield').value = data.baseYield || 1;
             document.getElementById('recipe-image-url').value = data.imageUrl || '';
             document.getElementById('recipe-description').value = data.descripcion || ''; // Load desc
             document.getElementById('recipe-meal-type').value = data.tipoComida || '';
@@ -377,6 +410,7 @@ export const recetasView = {
                 const docData = {
                     nombre: name,
                     precioVenta: parseFloat(document.getElementById('recipe-sale-price').value) || 0,
+                    baseYield: parseFloat(document.getElementById('recipe-base-yield').value) || 1,
                     descripcion: document.getElementById('recipe-description').value.trim(), // Save desc
                     tipoComida: document.getElementById('recipe-meal-type').value,
                     estiloCocina: document.getElementById('recipe-cuisine-style').value,
@@ -387,6 +421,8 @@ export const recetasView = {
 
                 if (id) {
                     await updateDoc(doc(db, "recetas", id), docData);
+                    // Update linked budgets (only for Updates)
+                    await updateLinkedBudgets(id, docData);
                 } else {
                     docData.createdAt = new Date();
                     await addDoc(collection(db, "recetas"), docData);
@@ -402,6 +438,67 @@ export const recetasView = {
                 btn.textContent = "Guardar Receta";
             }
         });
+
+        const updateLinkedBudgets = async (recipeId, newRecipeData) => {
+            try {
+                // 1. Fetch 'Creado' budgets (Client-side filter for now)
+                const snap = await getDocs(collection(db, "presupuestos"));
+                if (snap.empty) return;
+
+                const batchUpdates = [];
+
+                snap.forEach(d => {
+                    const b = d.data();
+                    if (b.status && b.status !== 'Creado') return; // Only update Created
+                    if (!b.items || !b.items.find(i => i.recipeId === recipeId)) return; // Not affected
+
+                    // Recalculate Totals
+                    let totalClient = 0;
+                    let totalInternal = 0;
+
+                    b.items.forEach(item => {
+                        // Use new data for target, cache for others
+                        let r = (item.recipeId === recipeId) ? newRecipeData : allRecipes.find(x => x.id === item.recipeId);
+
+                        if (r) {
+                            // Client Price
+                            totalClient += ((r.precioVenta || 0) * item.pax);
+
+                            // Internal Cost (Ingredients * (Pax / Yield))
+                            const yieldVal = r.baseYield || 1;
+                            const scaleFactor = item.pax / yieldVal;
+
+                            if (r.ingredientes) {
+                                let batchCost = 0;
+                                r.ingredientes.forEach(ing => {
+                                    // insumosDB is [{id, ...}] array. Need lookup.
+                                    const ins = insumosDB.find(x => x.id === ing.insumoId);
+                                    if (ins) batchCost += (ing.quantity * ins.costo);
+                                });
+                                totalInternal += (batchCost * scaleFactor);
+                            }
+                        }
+                    });
+
+                    // Update if changed
+                    if (Math.abs(totalClient - b.totalClient) > 0.01 || Math.abs(totalInternal - b.totalCost) > 0.01) {
+                        batchUpdates.push(updateDoc(doc(db, "presupuestos", d.id), {
+                            totalClient: totalClient,
+                            totalCost: totalInternal,
+                            updatedAt: new Date()
+                        }));
+                    }
+                });
+
+                if (batchUpdates.length > 0) {
+                    await Promise.all(batchUpdates);
+                    console.log(`Updated ${batchUpdates.length} linked budgets.`);
+                }
+
+            } catch (e) {
+                console.error("Error updating linked budgets:", e);
+            }
+        };
 
         init();
     }

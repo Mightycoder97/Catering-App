@@ -51,9 +51,13 @@ export const insumosView = {
                                         <option value="" selected disabled>Seleccione...</option>
                                         <option value="Verdura">Verdura</option>
                                         <option value="Fruta">Fruta</option>
-                                        <option value="Abarrote">Abarrote</option>
                                         <option value="Carne">Carne</option>
+                                        <option value="Abarrote">Abarrote</option>
+                                        <option value="Lacteo">Lacteo</option>
+                                        <option value="Embutido">Embutido</option>
+                                        <option value="Licor">Licor</option>
                                         <option value="Menaje">Menaje</option>
+                                        <option value="Otro">Otro</option>
                                     </select>
                                 </div>
                                 <div class="row">
@@ -99,33 +103,94 @@ export const insumosView = {
                 tableBody.innerHTML = '';
 
                 if (querySnapshot.empty) {
-                    tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No hay insumos registrados.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No hay insumos registrados.</td></tr>`;
                     return;
                 }
 
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${data.nombre}</td>
-                        <td>${data.categoria || '-'}</td>
-                        <td>${data.unidad}</td>
-                        <td>S/. ${parseFloat(data.costo).toFixed(2)}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary me-1 edit-btn" 
-                                data-id="${doc.id}"
-                                data-nombre="${data.nombre}"
-                                data-categoria="${data.categoria || ''}"
-                                data-unidad="${data.unidad}"
-                                data-costo="${data.costo}">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${doc.id}">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    `;
-                    tableBody.appendChild(tr);
+                const insumos = [];
+                querySnapshot.forEach(doc => insumos.push({ id: doc.id, ...doc.data() }));
+
+                // Sort Alphabetically
+                insumos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+                // Group by Category
+                const grouped = {};
+                const categoriesOrder = ['Verdura', 'Fruta', 'Carne', 'Abarrote', 'Lacteo', 'Embutido', 'Licor', 'Menaje', 'Otro'];
+
+                insumos.forEach(item => {
+                    const cat = item.categoria || 'Otro';
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push(item);
+                });
+
+                // Render Groups
+                categoriesOrder.forEach(cat => {
+                    if (grouped[cat] && grouped[cat].length > 0) {
+                        // Category Header
+                        const headerTr = document.createElement('tr');
+                        headerTr.className = 'table-secondary fw-bold';
+                        headerTr.innerHTML = `<td colspan="5">${cat}</td>`;
+                        tableBody.appendChild(headerTr);
+
+                        // Items
+                        grouped[cat].forEach(data => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="ps-4">${data.nombre}</td>
+                                <td>${data.categoria || '-'}</td>
+                                <td>${data.unidad}</td>
+                                <td>S/. ${parseFloat(data.costo).toFixed(2)}</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary me-1 edit-btn" 
+                                        data-id="${data.id}"
+                                        data-nombre="${data.nombre}"
+                                        data-categoria="${data.categoria || ''}"
+                                        data-unidad="${data.unidad}"
+                                        data-costo="${data.costo}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${data.id}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            tableBody.appendChild(tr);
+                        });
+                    }
+                });
+
+                // Render "Others" not in list if any (fallback)
+                Object.keys(grouped).forEach(cat => {
+                    if (!categoriesOrder.includes(cat)) {
+                        const headerTr = document.createElement('tr');
+                        headerTr.className = 'table-secondary fw-bold';
+                        headerTr.innerHTML = `<td colspan="5">${cat}</td>`;
+                        tableBody.appendChild(headerTr);
+
+                        grouped[cat].forEach(data => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="ps-4">${data.nombre}</td>
+                                <td>${data.categoria || '-'}</td>
+                                <td>${data.unidad}</td>
+                                <td>S/. ${parseFloat(data.costo).toFixed(2)}</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary me-1 edit-btn" 
+                                        data-id="${data.id}"
+                                        data-nombre="${data.nombre}"
+                                        data-categoria="${data.categoria || ''}"
+                                        data-unidad="${data.unidad}"
+                                        data-costo="${data.costo}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${data.id}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            tableBody.appendChild(tr);
+                        });
+                    }
                 });
 
                 // Attach delete listeners
