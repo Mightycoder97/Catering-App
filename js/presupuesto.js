@@ -121,6 +121,18 @@ export const presupuestoView = {
                             </div>
 
                             <div class="col-12 mt-4">
+                                <h6 class="text-secondary border-bottom pb-2">Pago Adelantado</h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Monto de Adelanto</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">S/.</span>
+                                    <input type="number" class="form-control" id="budget-adelanto" placeholder="0.00" step="0.01" min="0">
+                                </div>
+                                <div class="form-text">Este monto se mostrará en la propuesta del cliente.</div>
+                            </div>
+
+                            <div class="col-12 mt-4">
                                 <h6 class="text-secondary border-bottom pb-2">Términos y Condiciones</h6>
                             </div>
                             <div class="col-md-8">
@@ -170,6 +182,7 @@ export const presupuestoView = {
                                     <button type="button" class="btn btn-outline-secondary" id="mode-internal">Interno (Insumos)</button>
                                 </div>
                                 <button type="button" class="btn btn-success" id="btn-print-proposal"><i class="bi bi-printer"></i> Imprimir</button>
+                                <button type="button" class="btn btn-success" id="btn-share-whatsapp" style="background: #25D366; border-color: #25D366;"><i class="bi bi-whatsapp"></i> Compartir</button>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                         </div>
@@ -682,6 +695,9 @@ export const presupuestoView = {
                 supplies: parseFloat(document.getElementById('cost-supplies').value) || 0
             };
 
+            // Adelanto
+            currentBudget.adelanto = parseFloat(document.getElementById('budget-adelanto').value) || 0;
+
             // Status & T&C
             currentBudget.status = document.getElementById('budget-status-select').value;
             currentBudget.tcId = document.getElementById('tc-select').value || '';
@@ -745,6 +761,11 @@ export const presupuestoView = {
                 document.getElementById('cost-lodging').value = data.costs.lodging || '';
                 document.getElementById('cost-staff').value = data.costs.staff || '';
                 document.getElementById('cost-supplies').value = data.costs.supplies || '';
+            }
+
+            // Load Adelanto
+            if (data.adelanto) {
+                document.getElementById('budget-adelanto').value = data.adelanto;
             }
 
             // Load T&C
@@ -903,10 +924,23 @@ export const presupuestoView = {
                     contentHtml += `</div>`;
                 }
 
+                const adelanto = data.adelanto || 0;
+                const saldoPendiente = (data.totalClient || 0) - adelanto;
+
                 contentHtml += `
                         <div class="total-section page-break-inside-avoid">
                             <div class="total-label">Total</div>
                             <div class="total-amount">S/. ${(data.totalClient || 0).toFixed(2)}</div>
+                            ${adelanto > 0 ? `
+                            <div class="adelanto-line">
+                                <div class="adelanto-label">Adelanto recibido</div>
+                                <div class="adelanto-amount">- S/. ${adelanto.toFixed(2)}</div>
+                            </div>
+                            <div class="saldo-line">
+                                <div class="saldo-label">Saldo Pendiente</div>
+                                <div class="saldo-amount">S/. ${saldoPendiente.toFixed(2)}</div>
+                            </div>
+                            ` : ''}
                         </div>
                         
                         ${(() => {
@@ -1105,6 +1139,13 @@ body { font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; color: 
 .total-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 6px; }
 .total-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 30px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; }
 
+.adelanto-line { margin-top: 14px; padding-top: 12px; border-top: 1px dashed #d4cbb8; }
+.adelanto-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 4px; }
+.adelanto-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 20px; font-weight: 600; color: #6a994e; letter-spacing: 0.5px; }
+.saldo-line { margin-top: 12px; padding-top: 12px; border-top: 2px solid #c9a84c; }
+.saldo-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #c9a84c; margin-bottom: 4px; font-weight: 600; }
+.saldo-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; }
+
 .tc-section { margin-top: 36px; padding-top: 20px; border-top: 1px solid #e8e8e8; page-break-inside: avoid; }
 .tc-section h6 { font-family: 'Inter', sans-serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #999; margin-bottom: 12px; font-weight: 600; }
 .tc-text { font-size: 11px; color: #888; line-height: 1.7; white-space: pre-wrap; }
@@ -1132,6 +1173,53 @@ ${content}
                     printWin.print();
                 }, 400);
             };
+        });
+
+        // --- Share via WhatsApp ---
+        document.getElementById('btn-share-whatsapp').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-share-whatsapp');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando...';
+            btn.disabled = true;
+
+            try {
+                const target = document.getElementById('budget-detail-content');
+                const canvas = await html2canvas(target, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                const file = new File([blob], 'cotizacion.png', { type: 'image/png' });
+
+                // Try Web Share API (works on mobile)
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Cotización',
+                        text: 'Aquí le envío la cotización de su evento'
+                    });
+                } else {
+                    // Desktop fallback: download image + open WhatsApp
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'cotizacion.png';
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                    const msg = encodeURIComponent('Hola, le envío la cotización de su evento. Por favor revise la imagen adjunta.');
+                    window.open(`https://wa.me/?text=${msg}`, '_blank');
+                }
+            } catch (err) {
+                console.error('Share error:', err);
+                alert('Error al generar imagen: ' + err.message);
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
         });
 
         // --- Quick Add / Edit T&C Logic ---
