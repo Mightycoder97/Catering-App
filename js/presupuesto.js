@@ -1097,12 +1097,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; color: 
 .proposal-sheet { max-width: 210mm; margin: 0 auto; padding: 40px 38px; }
 
 .proposal-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #c9a84c; padding-bottom: 24px; margin-bottom: 32px; }
-.proposal-brand { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: #1a1a1a; }
+.proposal-brand { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: #1a1a1a; }
 .proposal-brand span { color: #c9a84c; }
 .proposal-tagline { font-family: 'Inter', sans-serif; font-size: 9px; letter-spacing: 4px; color: #888; text-transform: uppercase; font-weight: 400; margin-top: 5px; }
 
 .client-info-table td { padding: 4px 12px; font-size: 12px; color: #555; vertical-align: top; }
-.client-info-table td.label { font-weight: 600; color: #1a1a1a; text-align: right; width: 90px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; padding-top: 6px; }
+.client-info-table td.label { font-weight: 600; color: #1a1a1a; text-align: right; width: 90px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding-top: 6px; }
 
 .day-divider { margin-bottom: 32px; }
 .day-badge { display: inline-block; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #c9a84c; border: 1px solid #c9a84c; padding: 5px 24px; }
@@ -1135,16 +1135,16 @@ body { font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; color: 
 .text-muted { color: #999; }
 .text-end { text-align: right; }
 
-.total-section { background: linear-gradient(135deg, #faf8f3, #f5f0e6); padding: 24px 28px; text-align: right; margin-top: 36px; border: 1px solid #e0d9c8; border-left: 4px solid #c9a84c; page-break-inside: avoid; }
+.total-section { background: linear-gradient(135deg, #faf8f3, #f5f0e6); padding: 8px 11px; text-align: right; margin-top: 14px; border: 1px solid #e0d9c8; border-left: 4px solid #c9a84c; page-break-inside: avoid; }
 .total-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 6px; }
-.total-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 30px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; }
+.total-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; }
 
 .adelanto-line { margin-top: 14px; padding-top: 12px; border-top: 1px dashed #d4cbb8; }
 .adelanto-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 4px; }
-.adelanto-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 20px; font-weight: 600; color: #6a994e; letter-spacing: 0.5px; }
+.adelanto-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 16px; font-weight: 600; color: #6a994e; letter-spacing: 0.5px; }
 .saldo-line { margin-top: 12px; padding-top: 12px; border-top: 2px solid #c9a84c; }
 .saldo-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #c9a84c; margin-bottom: 4px; font-weight: 600; }
-.saldo-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; }
+.saldo-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; }
 
 .tc-section { margin-top: 36px; padding-top: 20px; border-top: 1px solid #e8e8e8; page-break-inside: avoid; }
 .tc-section h6 { font-family: 'Inter', sans-serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #999; margin-bottom: 12px; font-weight: 600; }
