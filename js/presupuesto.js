@@ -1194,7 +1194,7 @@ ${content}
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
                 const file = new File([blob], 'cotizacion.png', { type: 'image/png' });
 
-                // Try Web Share API (works on mobile)
+                // Try Web Share API first (works on mobile / some browsers)
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({
                         files: [file],
@@ -1202,16 +1202,50 @@ ${content}
                         text: 'Aquí le envío la cotización de su evento'
                     });
                 } else {
-                    // Desktop fallback: download image + open WhatsApp
+                    // Desktop fallback: download image first
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = 'cotizacion.png';
+                    document.body.appendChild(a);
                     a.click();
+                    document.body.removeChild(a);
                     URL.revokeObjectURL(url);
 
                     const msg = encodeURIComponent('Hola, le envío la cotización de su evento. Por favor revise la imagen adjunta.');
-                    window.open(`https://wa.me/?text=${msg}`, '_blank');
+
+                    // Try opening WhatsApp Desktop app via protocol
+                    const whatsappDesktop = `whatsapp://send?text=${msg}`;
+                    const whatsappWeb = `https://web.whatsapp.com/send?text=${msg}`;
+
+                    // Attempt desktop app first, fall back to web
+                    const testLink = document.createElement('a');
+                    testLink.href = whatsappDesktop;
+
+                    // Use a timeout approach: try desktop protocol, if it fails open web
+                    let opened = false;
+                    const webFallbackTimer = setTimeout(() => {
+                        if (!opened) {
+                            window.open(whatsappWeb, '_blank');
+                        }
+                    }, 1500);
+
+                    window.location.href = whatsappDesktop;
+
+                    // Listen for blur (app opened successfully)
+                    const blurHandler = () => {
+                        opened = true;
+                        clearTimeout(webFallbackTimer);
+                        window.removeEventListener('blur', blurHandler);
+                    };
+                    window.addEventListener('blur', blurHandler);
+
+                    // Clean up listener after timeout
+                    setTimeout(() => {
+                        window.removeEventListener('blur', blurHandler);
+                    }, 3000);
+
+                    alert('✅ La imagen de la cotización se ha descargado.\n\n📎 Adjunta la imagen descargada "cotizacion.png" en la conversación de WhatsApp que se abrirá.');
                 }
             } catch (err) {
                 console.error('Share error:', err);
