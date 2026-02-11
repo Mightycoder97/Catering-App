@@ -1135,7 +1135,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; color: 
 .text-muted { color: #999; }
 .text-end { text-align: right; }
 
-.total-section { background: linear-gradient(135deg, #faf8f3, #f5f0e6); padding: 8px 11px; text-align: right; margin-top: 14px; border: 1px solid #e0d9c8; border-left: 4px solid #c9a84c; page-break-inside: avoid; }
+.total-section { background: linear-gradient(135deg, #faf8f3, #f5f0e6); padding: 0; text-align: right; margin-top: 0; border: 1px solid #e0d9c8; border-left: 4px solid #c9a84c; page-break-inside: avoid; }
 .total-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 6px; }
 .total-amount { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; }
 
