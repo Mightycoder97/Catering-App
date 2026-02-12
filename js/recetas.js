@@ -262,7 +262,9 @@ export const recetasView = {
             recipes.forEach(data => {
                 let cost = 0;
                 if (data.ingredientes) {
-                    cost = calcRecipeCost(data.ingredientes);
+                    const totalCost = calcRecipeCost(data.ingredientes);
+                    const baseYield = data.baseYield || 1;
+                    cost = totalCost / baseYield;
                 }
 
                 const imgHtml = data.imageUrl
@@ -280,7 +282,7 @@ export const recetasView = {
                                 ${data.tipoComida ? `<span class="badge bg-info text-dark me-1">${data.tipoComida}</span>` : ''}
                                 ${data.estiloCocina ? `<span class="badge bg-secondary me-1">${data.estiloCocina}</span>` : ''}
                             </div>
-                            <p class="card-text text-muted small">Costo Est: S/. ${cost.toFixed(2)}</p>
+                            <p class="card-text text-muted small">Costo Est: S/. ${cost.toFixed(2)} / porción</p>
                         </div>
                         <div class="card-footer bg-white border-top-0 text-end">
                             <button class="btn btn-sm btn-outline-primary edit-recipe" data-id="${data.id}">Editar</button>
