@@ -225,6 +225,7 @@ export const recetasView = {
             rSnap.forEach(doc => recetasDB.push({ id: doc.id, ...doc.data() }));
 
             loadRecipes();
+            attachListeners();
         };
 
         let allRecipes = []; // Local cache for filtering
