@@ -283,6 +283,7 @@ export const recetasView = {
                                 ${data.estiloCocina ? `<span class="badge bg-secondary me-1">${data.estiloCocina}</span>` : ''}
                             </div>
                             <p class="card-text text-muted small">Costo Est: S/. ${cost.toFixed(2)} / porción</p>
+                            <p class="card-text small fw-semibold ${data.precioVenta ? 'text-success' : 'text-muted'}">Precio Venta: S/. ${(data.precioVenta || 0).toFixed(2)} / porción</p>
                         </div>
                         <div class="card-footer bg-white border-top-0 text-end">
                             <button class="btn btn-sm btn-outline-primary edit-recipe" data-id="${data.id}">Editar</button>
