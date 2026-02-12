@@ -617,7 +617,8 @@ export const presupuestoView = {
                     const sub = recipesDB.find(r => r.id === ing.recetaId);
                     if (sub && sub.ingredientes && !visited.has(ing.recetaId)) {
                         visited.add(ing.recetaId);
-                        cost += ing.quantity * getInsumoCostFromIngredients(sub.ingredientes, recipesDB, insumosDB, visited);
+                        const subYield = sub.baseYield || 1;
+                        cost += ing.quantity * (getInsumoCostFromIngredients(sub.ingredientes, recipesDB, insumosDB, visited) / subYield);
                     }
                 } else {
                     const ins = insumosDB[ing.insumoId];
@@ -634,7 +635,8 @@ export const presupuestoView = {
                     const sub = recipesDB.find(r => r.id === ing.recetaId);
                     if (sub && sub.ingredientes && !visited.has(ing.recetaId)) {
                         visited.add(ing.recetaId);
-                        collectInsumos(sub.ingredientes, scale * ing.quantity, recipesDB, bom, visited);
+                        const subYield = sub.baseYield || 1;
+                        collectInsumos(sub.ingredientes, scale * ing.quantity / subYield, recipesDB, bom, visited);
                     }
                 } else {
                     if (!bom[ing.insumoId]) bom[ing.insumoId] = 0;
@@ -971,7 +973,8 @@ export const presupuestoView = {
                 items.forEach(item => {
                     const r = recipesDB.find(x => x.id === item.recipeId);
                     if (r && r.ingredientes) {
-                        collectInsumos(r.ingredientes, item.pax, recipesDB, totalBOM);
+                        const yieldVal = r.baseYield || 1;
+                        collectInsumos(r.ingredientes, item.pax / yieldVal, recipesDB, totalBOM);
                     }
                 });
 
