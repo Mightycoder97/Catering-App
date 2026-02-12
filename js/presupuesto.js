@@ -86,6 +86,14 @@ export const presupuestoView = {
                                      <label class="form-label">Lugar / Dirección</label>
                                      <input type="text" class="form-control" id="event-location">
                                 </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="bi bi-cup-straw me-1"></i>Bebida del Día (Almuerzo y Cena)</label>
+                                    <select class="form-select" id="budget-beverage-select">
+                                        <option value="">Sin bebida</option>
+                                    </select>
+                                    <div class="form-text">Para Desayuno: Jugo de Frutas y Café (incluido siempre).</div>
+                                </div>
                                 
                                 <div class="col-12 mt-4">
                                     <h6 class="text-secondary border-bottom pb-2">Gastos Operativos (Interno)</h6>
@@ -317,7 +325,9 @@ export const presupuestoView = {
             location: '',
             eventDate: '',
             daysCount: 1,
-            items: [] // { id, day, meal, recipeId, recipeName, pax, variant }
+            items: [], // { id, day, meal, recipeId, recipeName, pax, variant }
+            beverageId: '',
+            beverageName: ''
         };
         let viewBudgetState = { id: null, mode: 'client' };
 
@@ -341,6 +351,13 @@ export const presupuestoView = {
                 const r = { id: d.id, ...d.data() };
                 recipesDB.push(r);
                 modalRecipeSelect.innerHTML += `<option value="${r.id}">${r.nombre}</option>`;
+            });
+
+            // Populate beverage selector with recipes of type 'Bebida'
+            const beverageSelect = document.getElementById('budget-beverage-select');
+            beverageSelect.innerHTML = '<option value="">Sin bebida</option>';
+            recipesDB.filter(r => r.tipoComida === 'Bebida').forEach(r => {
+                beverageSelect.innerHTML += `<option value="${r.id}">${r.nombre}</option>`;
             });
 
             clientSelect.innerHTML = '<option value="">Selecciona Cliente...</option>';
@@ -461,11 +478,12 @@ export const presupuestoView = {
 
         // --- Plan Logic ---
         const resetForm = () => {
-            currentBudget = { id: null, clientId: '', clientName: '', eventName: '', location: '', eventDate: '', daysCount: 1, items: [], status: 'Creado', tcId: '' };
+            currentBudget = { id: null, clientId: '', clientName: '', eventName: '', location: '', eventDate: '', daysCount: 1, items: [], status: 'Creado', tcId: '', beverageId: '', beverageName: '' };
             mainForm.reset();
             document.getElementById('budget-status-select').value = 'Creado';
             document.getElementById('tc-select').value = '';
             document.getElementById('tc-preview').textContent = 'Selecciona un T&C para ver la vista previa';
+            document.getElementById('budget-beverage-select').value = '';
             daysContainer.innerHTML = '';
             displayTotal.innerText = "Total: $0.00";
         };
@@ -663,6 +681,34 @@ export const presupuestoView = {
                     }
                 }
             });
+
+            // Add beverage cost for Almuerzo and Cena items
+            const bevId = currentBudget.beverageId || document.getElementById('budget-beverage-select').value;
+            if (bevId) {
+                const bevRecipe = recipesDB.find(r => r.id === bevId);
+                if (bevRecipe) {
+                    // Get unique (day, meal) combinations for Almuerzo and Cena
+                    const mealPaxMap = {};
+                    currentBudget.items.forEach(item => {
+                        if (item.meal === 'Almuerzo' || item.meal === 'Cena') {
+                            const key = `${item.day}_${item.meal}`;
+                            if (!mealPaxMap[key]) mealPaxMap[key] = 0;
+                            mealPaxMap[key] = Math.max(mealPaxMap[key], item.pax);
+                        }
+                    });
+                    const totalBevPax = Object.values(mealPaxMap).reduce((s, p) => s + p, 0);
+                    if (totalBevPax > 0) {
+                        totalClient += ((bevRecipe.precioVenta || 0) * totalBevPax);
+                        const bevYield = bevRecipe.baseYield || 1;
+                        const bevScale = totalBevPax / bevYield;
+                        if (bevRecipe.ingredientes) {
+                            const bevBatchCost = getInsumoCostFromIngredients(bevRecipe.ingredientes, recipesDB, insumosDB);
+                            totalInternal += (bevBatchCost * bevScale);
+                        }
+                    }
+                }
+            }
+
             return { totalClient, totalInternal };
         };
 
@@ -703,6 +749,11 @@ export const presupuestoView = {
             // Status & T&C
             currentBudget.status = document.getElementById('budget-status-select').value;
             currentBudget.tcId = document.getElementById('tc-select').value || '';
+
+            // Beverage
+            const bevSelect = document.getElementById('budget-beverage-select');
+            currentBudget.beverageId = bevSelect.value || '';
+            currentBudget.beverageName = bevSelect.value ? bevSelect.options[bevSelect.selectedIndex].text : '';
 
             const totals = calculateTotal();
             currentBudget.totalClient = totals.totalClient; // Revenue
@@ -775,6 +826,11 @@ export const presupuestoView = {
                 document.getElementById('tc-select').value = data.tcId;
                 const tc = tcDB.find(t => t.id === data.tcId);
                 document.getElementById('tc-preview').textContent = tc ? tc.texto : '';
+            }
+
+            // Load Beverage
+            if (data.beverageId) {
+                document.getElementById('budget-beverage-select').value = data.beverageId;
             }
 
             generateDayCards(data.daysCount || 1);
@@ -863,6 +919,9 @@ export const presupuestoView = {
                         meals[i.meal].push(i);
                     });
 
+                    // Get beverage info
+                    const bevRecipe = data.beverageId ? recipesDB.find(r => r.id === data.beverageId) : null;
+
                     const mealOrder = ['Desayuno', 'Almuerzo', 'Cena', 'Coctel', 'Postre', 'Bebida', 'Otro'];
                     mealOrder.forEach(meal => {
                         if (meals[meal]) {
@@ -896,6 +955,23 @@ export const presupuestoView = {
                                     </div>
                                 `;
                             });
+
+                            // Add beverage line after meal items
+                            if (meal === 'Desayuno') {
+                                contentHtml += `
+                                    <div class="d-flex align-items-center mb-2" style="padding: 8px 12px; background: #f8f6f0; border-radius: 5px; border: 1px solid #f0ede5;">
+                                        <span style="color: #c9a84c; margin-right: 10px; font-size: 16px;"><i class="bi bi-cup-hot"></i></span>
+                                        <span style="font-size: 13px; color: #555;"><strong>Bebida:</strong> Jugo de Frutas y Café</span>
+                                    </div>
+                                `;
+                            } else if ((meal === 'Almuerzo' || meal === 'Cena') && bevRecipe) {
+                                contentHtml += `
+                                    <div class="d-flex align-items-center mb-2" style="padding: 8px 12px; background: #f8f6f0; border-radius: 5px; border: 1px solid #f0ede5;">
+                                        <span style="color: #c9a84c; margin-right: 10px; font-size: 16px;"><i class="bi bi-cup-straw"></i></span>
+                                        <span style="font-size: 13px; color: #555;"><strong>Bebida:</strong> ${bevRecipe.nombre || data.beverageName}</span>
+                                    </div>
+                                `;
+                            }
                         }
                     });
 
@@ -977,6 +1053,26 @@ export const presupuestoView = {
                         collectInsumos(r.ingredientes, item.pax / yieldVal, recipesDB, totalBOM);
                     }
                 });
+
+                // Add beverage insumos for Almuerzo/Cena
+                if (data.beverageId) {
+                    const bevR = recipesDB.find(r => r.id === data.beverageId);
+                    if (bevR && bevR.ingredientes) {
+                        const mealPaxMap = {};
+                        items.forEach(item => {
+                            if (item.meal === 'Almuerzo' || item.meal === 'Cena') {
+                                const key = `${item.day}_${item.meal}`;
+                                if (!mealPaxMap[key]) mealPaxMap[key] = 0;
+                                mealPaxMap[key] = Math.max(mealPaxMap[key], item.pax);
+                            }
+                        });
+                        const totalBevPax = Object.values(mealPaxMap).reduce((s, p) => s + p, 0);
+                        if (totalBevPax > 0) {
+                            const bevYield = bevR.baseYield || 1;
+                            collectInsumos(bevR.ingredientes, totalBevPax / bevYield, recipesDB, totalBOM);
+                        }
+                    }
+                }
 
                 contentHtml += `
                     <h4 class="text-danger mb-3"><i class="bi bi-cart"></i> Lista de Compras (Interno)</h4>
@@ -1093,6 +1189,7 @@ export const presupuestoView = {
 <meta charset="UTF-8">
 <title>Propuesta</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; color: #2c2c2c; line-height: 1.6; padding: 0; margin: 0; background: white; }

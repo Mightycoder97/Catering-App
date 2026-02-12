@@ -75,21 +75,71 @@ export const reportesView = {
 
         let allBudgets = [];
 
+        // Helper: recursively calculate ingredient cost with baseYield
+        const calcIngredientCost = (ingredientes, recipesArr, insumosMap, visited = new Set()) => {
+            let cost = 0;
+            ingredientes.forEach(ing => {
+                if (ing.type === 'receta') {
+                    const sub = recipesArr.find(r => r.id === ing.recetaId);
+                    if (sub && sub.ingredientes && !visited.has(ing.recetaId)) {
+                        visited.add(ing.recetaId);
+                        const subYield = sub.baseYield || 1;
+                        cost += ing.quantity * (calcIngredientCost(sub.ingredientes, recipesArr, insumosMap, visited) / subYield);
+                    }
+                } else {
+                    const ins = insumosMap[ing.insumoId];
+                    if (ins) cost += (ing.quantity * ins.costo);
+                }
+            });
+            return cost;
+        };
+
         const loadData = async () => {
-            const snap = await getDocs(collection(db, "presupuestos"));
+            // Load all required collections
+            const [budgetSnap, recipeSnap, insumoSnap] = await Promise.all([
+                getDocs(collection(db, "presupuestos")),
+                getDocs(collection(db, "recetas")),
+                getDocs(collection(db, "insumos"))
+            ]);
+
+            // Build recipes array and insumos map
+            const recipesArr = [];
+            recipeSnap.forEach(d => recipesArr.push({ id: d.id, ...d.data() }));
+
+            const insumosMap = {};
+            insumoSnap.forEach(d => { insumosMap[d.id] = d.data(); });
+
             allBudgets = [];
-            snap.forEach(d => {
+            budgetSnap.forEach(d => {
                 const b = d.data();
                 // Ensure date object
                 let dateObj = null;
                 if (b.startDate) dateObj = new Date(b.startDate);
                 else if (b.createdAt && b.createdAt.seconds) dateObj = new Date(b.createdAt.seconds * 1000);
 
-                // Costs Logic
+                // Revenue = client price
                 const revenue = b.totalClient || 0;
-                // Cost = Ingredients (totalCost) + Ops (transport, etc)
+
+                // Recalculate ingredient cost from items
+                let ingredientCost = 0;
+                if (b.items && b.items.length > 0) {
+                    b.items.forEach(item => {
+                        const r = recipesArr.find(x => x.id === item.recipeId);
+                        if (r && r.ingredientes) {
+                            const yieldVal = r.baseYield || 1;
+                            const scaleFactor = item.pax / yieldVal;
+                            const batchCost = calcIngredientCost(r.ingredientes, recipesArr, insumosMap);
+                            ingredientCost += (batchCost * scaleFactor);
+                        }
+                    });
+                } else {
+                    // Fallback to stored value for legacy budgets without items
+                    ingredientCost = b.totalCost || 0;
+                }
+
+                // Operational costs
                 const ops = b.costs ? (b.costs.transport || 0) + (b.costs.lodging || 0) + (b.costs.staff || 0) + (b.costs.supplies || 0) : 0;
-                const cost = (b.totalCost || 0) + ops; // totalCost stored is internal ingredients cost
+                const cost = ingredientCost + ops;
 
                 allBudgets.push({
                     eventName: b.eventName,
