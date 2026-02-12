@@ -400,7 +400,8 @@ export const recetasView = {
                     const subReceta = recetasDB.find(r => r.id === ing.recetaId);
                     if (subReceta && subReceta.ingredientes && !visited.has(ing.recetaId)) {
                         visited.add(ing.recetaId);
-                        cost += ing.quantity * calcRecipeCost(subReceta.ingredientes, visited);
+                        const subYield = subReceta.baseYield || 1;
+                        cost += ing.quantity * (calcRecipeCost(subReceta.ingredientes, visited) / subYield);
                     }
                 } else {
                     const ins = insumosDB.find(i => i.id === ing.insumoId);
