@@ -214,6 +214,7 @@ export const presupuestoView = {
                         <div class="modal-body">
                             <form id="add-item-form">
                                 <input type="hidden" id="modal-day-idx">
+                                <input type="hidden" id="modal-edit-item-idx">
                                 <div class="mb-3">
                                     <label class="form-label">Plato / Receta</label>
                                     <select class="form-select" id="modal-recipe-select" required></select>
@@ -548,7 +549,9 @@ export const presupuestoView = {
                 btn.addEventListener('click', (e) => {
                     const day = e.target.closest('button').dataset.day;
                     document.getElementById('modal-day-idx').value = day;
+                    document.getElementById('modal-edit-item-idx').value = '';
                     document.getElementById('add-item-form').reset();
+                    document.getElementById('btn-confirm-add-item').textContent = 'Agregar';
                     addItemModal.show();
                 });
             });
@@ -576,7 +579,10 @@ export const presupuestoView = {
                                 <i class="bi bi-people"></i> ${item.pax} personas
                             </div>
                         </div>
-                        <button type="button" class="btn btn-sm text-danger btn-remove-item" data-idx="${idx}"><i class="bi bi-x"></i></button>
+                        <div class="d-flex gap-1">
+                            <button type="button" class="btn btn-sm text-primary btn-edit-item" data-idx="${idx}"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn btn-sm text-danger btn-remove-item" data-idx="${idx}"><i class="bi bi-x"></i></button>
+                        </div>
                     `;
                     list.appendChild(li);
                 }
@@ -587,6 +593,23 @@ export const presupuestoView = {
                     const idx = parseInt(e.target.closest('button').dataset.idx);
                     currentBudget.items.splice(idx, 1);
                     renderDayItems();
+                });
+            });
+
+            document.querySelectorAll('.btn-edit-item').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.target.closest('button').dataset.idx);
+                    const item = currentBudget.items[idx];
+
+                    document.getElementById('modal-day-idx').value = item.day;
+                    document.getElementById('modal-edit-item-idx').value = idx;
+                    document.getElementById('modal-recipe-select').value = item.recipeId;
+                    document.getElementById('modal-item-pax').value = item.pax;
+                    document.getElementById('modal-item-variant').value = item.variant || '';
+                    document.getElementById('modal-item-meal').value = item.meal;
+
+                    document.getElementById('btn-confirm-add-item').textContent = 'Actualizar';
+                    addItemModal.show();
                 });
             });
         };
@@ -601,6 +624,7 @@ export const presupuestoView = {
 
             if (!recipeId || !pax) return;
 
+            const editIdx = document.getElementById('modal-edit-item-idx').value;
             const recipe = recipesDB.find(r => r.id === recipeId);
 
             const newItem = {
@@ -612,7 +636,13 @@ export const presupuestoView = {
                 variant
             };
 
-            currentBudget.items.push(newItem);
+            if (editIdx !== '') {
+                // Update existing
+                currentBudget.items[editIdx] = newItem;
+            } else {
+                // Add new
+                currentBudget.items.push(newItem);
+            }
 
             // Sort items by meal order roughly?
             const mealOrder = { 'Desayuno': 1, 'Almuerzo': 2, 'Cena': 3, 'Coctel': 4, 'Otro': 5 };
@@ -900,7 +930,7 @@ export const presupuestoView = {
                 // ** PROFESSIONAL CLIENT VIEW **
                 const days = data.daysCount || 1;
                 for (let d = 1; d <= days; d++) {
-                    const dayItems = items.filter(i => i.day === d && i.meal !== 'Cremas y Salsas');
+                    const dayItems = items.filter(i => i.day === d);
                     if (dayItems.length === 0) continue;
 
                     contentHtml += `
@@ -975,30 +1005,23 @@ export const presupuestoView = {
                         }
                     });
 
-                    contentHtml += `</div>`;
-                }
-
-                // --- Cremas y Salsas Section (aggregated across all days) ---
-                const cremasItems = items.filter(i => i.meal === 'Cremas y Salsas');
-                if (cremasItems.length > 0) {
-                    contentHtml += `
-                        <div class="day-divider">
-                            <div class="meal-section-title" style="margin-top: 10px;">Cremas y Salsas Incluidas</div>
-                    `;
-                    // Deduplicate by recipeId, aggregate names
-                    const seen = new Set();
-                    cremasItems.forEach(item => {
-                        if (seen.has(item.recipeId)) return;
-                        seen.add(item.recipeId);
-                        const recipe = recipesDB.find(r => r.id === item.recipeId) || {};
+                    // --- Cremas y Salsas Section (For THIS Day) ---
+                    if (meals['Cremas y Salsas']) {
                         contentHtml += `
-                            <div class="d-flex align-items-center mb-2">
-                                <span style="color: #c9a84c; margin-right: 8px;">•</span>
-                                <span class="recipe-title" style="font-size: 14px;">${item.recipeName}</span>
-                                ${recipe.descripcion ? `<span class="recipe-desc ms-2" style="margin-bottom: 0; font-size: 12px;">— ${recipe.descripcion}</span>` : ''}
-                            </div>
+                            <div class="meal-section-title" style="margin-top: 10px;">Cremas y Salsas</div>
                         `;
-                    });
+                        meals['Cremas y Salsas'].forEach(item => {
+                            const recipe = recipesDB.find(r => r.id === item.recipeId) || {};
+                            contentHtml += `
+                                <div class="d-flex align-items-center mb-2">
+                                    <span style="color: #c9a84c; margin-right: 8px;">•</span>
+                                    <span class="recipe-title" style="font-size: 14px;">${item.recipeName}</span>
+                                    ${recipe.descripcion ? `<span class="recipe-desc ms-2" style="margin-bottom: 0; font-size: 12px;">— ${recipe.descripcion}</span>` : ''}
+                                </div>
+                            `;
+                        });
+                    }
+
                     contentHtml += `</div>`;
                 }
 
