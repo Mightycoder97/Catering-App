@@ -1106,6 +1106,7 @@ export const presupuestoView = {
                                     <th>Insumo</th>
                                     <th>Cantidad Total</th>
                                     <th>Unidad</th>
+                                    <th>Costo Unit.</th>
                                     <th class="text-end">Costo Est.</th>
                                 </tr>
                             </thead>
@@ -1124,6 +1125,7 @@ export const presupuestoView = {
                                  <td>${insumo.nombre}</td>
                                  <td>${qty.toFixed(2)}</td>
                                  <td>${insumo.unidad}</td>
+                                 <td>S/. ${insumo.costo.toFixed(2)}</td>
                                  <td class="text-end">S/. ${cost.toFixed(2)}</td>
                              </tr>
                          `;
